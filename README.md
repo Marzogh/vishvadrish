@@ -4,7 +4,7 @@
 
 Satellite imagery exploration, downloads and browser-based time-lapse creation.
 
-The viewer supports JMA Himawari-9 full-disc B13 infrared and Australia regional B13 infrared, B08 water vapour and True Color Reproduction. It discovers
+The viewer supports JMA Himawari-9 full-disc and Australia regional B13 infrared, B08 water vapour and True Color Reproduction. It discovers
 dated observations directly from JMA and provides a timeline, playback, zoom, pan,
 source credit and recoverable loading errors. Image identity is not independently
 verified: compare the catalogue time with the timestamp printed in the image.
@@ -25,8 +25,7 @@ the selected playback rate is a target rather than precise video timing.
 
 Use the timeline arrow keys to select observations. Focus the image view and
 press plus/minus to zoom, arrow keys to pan, or zero to fit. Pointer dragging also
-pans. The viewer retains at most 12 image URLs and 24 acquired image blobs (up to 50 MB) and offers the latest 6, 12 or 24
-catalogued observations. Refresh is required after five minutes before further
+pans. The viewer retains at most 12 image URLs and 24 acquired image blobs (up to 50 MB) and selects observations by catalogue-limited Hours. Refresh is required after five minutes before further
 image requests. This guard does not independently verify a rolling URL's contents.
 
 ## Run the checks
@@ -83,7 +82,7 @@ adds a 56 px source-credit strip. Timestamp text can be hidden; source credit is
 always retained. PNG and ZIP use the selected size; quality applies to video.
 Download links appear after processing, together with a JSON provenance manifest.
 The video can be previewed before downloading. Cancel export stops the job without
-offering partial output. Jobs are limited to 24 observations, 144 held output
+offering partial output. Jobs are limited to 144 observations, 144 held output
 frames and 50 MB result size. ZIP packaging and video finalisation use memory;
 this is not an unlimited streaming exporter.
 
@@ -100,7 +99,7 @@ Dependencies are copied locally; the browser does not import them from a CDN.
 ## Australia views
 
 Use Region and Product above the image. End selects an actual dated catalogue
-observation; frame count selects the observations ending there. Colour may be
+observation; Hours selects the observations ending there. Colour may be
 blank at night: choose an earlier end time or infrared. Blank/dark colour frames
 are rejected, not replaced with a different band.
 
@@ -114,3 +113,9 @@ export is 550 × 484. Preview pan/zoom does not alter the selected export extent
 TCR outputs always retain JMA, NOAA/NESDIS and CSU/CIRA credit. Source information,
 JSON manifests and the image package's ATTRIBUTION.txt include the composite
 explanation, collaboration acknowledgement and references required by JMA.
+
+Hours is an editable preset field, defaulting to All available. It selects actual observations ending at End. Numeric durations are limited to the current JMA catalogue, not an assumed multi-day archive. The viewer shows available hours and resulting frame count. A selection is capped at 144 observations and 50 MB of acquired imagery.
+
+Play buffers the complete selected sequence before starting, with progress and cancellation. Decoded display frames are capped at 700 px width and 256 MB estimated RGBA storage, alongside the 50 MB acquired-image limit. Exports retain original acquired pixels. Playback performs no image network requests and keeps the previous frame visible while preparing. Changing the selection releases the display buffer.
+
+The viewer starts with True Color Reproduction and 4 fps. The fps dropdown offers 1, 2, 4, 6, 8 and 10 for both playback and video export. Fullscreen expands the viewer and keeps the timeline and playback controls floating over the image. Use Exit fullscreen or Escape to leave it.

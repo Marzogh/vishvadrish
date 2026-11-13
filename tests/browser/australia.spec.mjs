@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { fixtures } from './fixtures.mjs';
 import { unzipSync } from 'fflate';
 import { readFile } from 'node:fs/promises';
-async function open(page, options={}){await fixtures(page,options);await page.goto('/');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#image')).toBeVisible();}
-async function exported(page,kind){await page.locator('[data-export="'+kind+'"]').click();await expect(page.locator('#export-status')).toHaveText('Ready to download.');}
+async function open(page, options={}){await fixtures(page,options);await page.goto('/');await page.locator('#product').selectOption('jma.himawari9.full-disc.b13');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#image')).toBeVisible();}
+async function exported(page,kind){await page.locator('#fps').selectOption('2');await page.locator('[data-export="'+kind+'"]').click();await expect(page.locator('#export-status')).toHaveText('Ready to download.');}
 async function saved(page,info,name){const waiting=page.waitForEvent('download');await page.locator('#export-file').click();const file=info.outputPath(name);await(await waiting).saveAs(file);return readFile(file);}
 test('Australia selection isolates products and preserves regional PNG, ZIP and video geometry',async({page},info)=>{
  await open(page);await expect(page.locator('#image')).toHaveJSProperty('naturalWidth',901);
@@ -21,9 +21,9 @@ test('colour dark-frame warning recovers with earlier actual end time and carrie
  await page.locator('.save summary').click();await exported(page,'zip');const files=unzipSync(await saved(page,info,'tcr.zip'));expect(new TextDecoder().decode(files['ATTRIBUTION.txt'])).toContain('NOAA/NESDIS');const record=JSON.parse(new TextDecoder().decode(files['manifest.json']));expect(record.product.rights.minimumCredit).toBe('JMA | NOAA/NESDIS | CSU/CIRA');
 });
 test('changed regional dimensions are rejected without a stale image',async({page})=>{
- await fixtures(page,{badRegionalDimensions:true});await page.goto('/');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#error')).toContainText('dimensions changed');await expect(page.locator('#image')).toBeHidden();
+ await fixtures(page,{badRegionalDimensions:true});await page.goto('/');await page.locator('#product').selectOption('jma.himawari9.full-disc.b13');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#error')).toContainText('dimensions changed');await expect(page.locator('#image')).toBeHidden();
 });
 test('live Australia infrared and water vapour selection and video export',async({page},info)=>{
- test.skip(process.env.JMA_LIVE!=='1','Set JMA_LIVE=1');test.setTimeout(60000);await page.goto('/');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#image')).toHaveJSProperty('naturalWidth',901);
- await page.locator('#product').selectOption('jma.himawari9.australia.b08');await expect(page.locator('#image')).toBeVisible();await page.getByRole('button',{name:'Latest 6 observations',exact:true}).click();await expect(page.locator('#image')).toBeVisible();await page.locator('.save summary').click();await exported(page,'video');await expect(page.locator('#export-video')).toHaveJSProperty('duration',3);await saved(page,info,'live-australia.webm');await page.screenshot({path:info.outputPath('live-australia.png'),fullPage:true});
+ test.skip(process.env.JMA_LIVE!=='1','Set JMA_LIVE=1');test.setTimeout(60000);await page.goto('/');await page.locator('#product').selectOption('jma.himawari9.full-disc.b13');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#image')).toHaveJSProperty('naturalWidth',901);
+ await page.locator('#product').selectOption('jma.himawari9.australia.b08');await expect(page.locator('#image')).toBeVisible();await page.locator('#hours').fill('1');await page.locator('#hours').press('Tab');await expect(page.locator('#image')).toBeVisible();await page.locator('.save summary').click();await exported(page,'video');await expect(page.locator('#export-video')).toHaveJSProperty('duration',3);await saved(page,info,'live-australia.webm');await page.screenshot({path:info.outputPath('live-australia.png'),fullPage:true});
 });

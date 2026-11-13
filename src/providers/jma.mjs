@@ -33,6 +33,11 @@ Source and terms: https://www.data.jma.go.jp/mscweb/data/himawari/`;
 
 const australia = { kind: 'provider-region', regionId: 'jma-australia', bounds: [110, -45, 155, -10], axisOrder: 'longitude-latitude', sourceWidth: 901, sourceHeight: 701, georeferencing: 'provider-raster; exact CRS and pixel conventions unverified' };
 export const products = snapshot([himawariB13, ...[
+  ['b08', 'B08 · Water vapour', 'Upper-atmosphere water-vapour patterns, not surface humidity.'],
+  ['trm', 'True Color Reproduction', 'Daylight colour composite; the unlit part of the disc is dark.'],
+].map(([band, name, description]) => ({ ...himawariB13, id: `jma.himawari9.full-disc.${band}`, band, name, description,
+  rights: { ...himawariB13.rights, ...(band === 'trm' ? { minimumCredit: 'JMA | NOAA/NESDIS | CSU/CIRA', acknowledgement: tcrAcknowledgement } : {}) },
+})), ...[
   ['b13', 'B13 · Infrared', 'Cloud patterns day and night. Brightness is not calibrated temperature.'],
   ['b08', 'B08 · Water vapour', 'Upper-atmosphere water-vapour patterns, not surface humidity.'],
   ['trm', 'True Color Reproduction', 'Daylight colour composite. Blank or dark images may occur at night.'],
@@ -66,7 +71,7 @@ export function framesFromJmaOptions(options, { discoveredAt, product = himawari
       timeAuthority: 'provider-catalogue-label', validation: 'catalogue-only',
       requiresDaylight: product.band === 'trm',
       source: { catalogueUrl: product.sourceUrl, label: label.trim(), slot,
-        url: new URL(product.coverage.regionId === 'jma-australia' ? `img/aus/aus_${product.band}_${slot}.jpg` : `img/fd_/fd__b13_${slot}.jpg`, product.sourceUrl).href,
+        url: new URL(product.coverage.regionId === 'jma-australia' ? `img/aus/aus_${product.band}_${slot}.jpg` : `img/fd_/fd__${product.band.toLowerCase()}_${slot}.jpg`, product.sourceUrl).href,
         locatorKind: 'rolling', requiresIdentityCheckOnRetrieval: true },
     };
   });

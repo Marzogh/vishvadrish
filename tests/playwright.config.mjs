@@ -8,5 +8,5 @@ export default defineConfig({
   testDir: './browser', outputDir: resolve(output), workers: 1,
   reporter: [['list']], timeout: 30000,
   use: { baseURL: 'http://127.0.0.1:4173', browserName: 'chromium', screenshot: 'only-on-failure', trace: 'retain-on-failure' },
-  webServer: { command: 'npm run dev', cwd: fileURLToPath(new URL('../', import.meta.url)), url: 'http://127.0.0.1:4173', reuseExistingServer: false },
+  webServer: { command: 'npm run dev', cwd: fileURLToPath(new URL('../', import.meta.url)), url: 'http://127.0.0.1:4173', reuseExistingServer: process.env.VISHVADRISH_REUSE_PREVIEW === '1' },
 });

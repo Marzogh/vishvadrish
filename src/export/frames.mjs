@@ -40,6 +40,7 @@ export async function acquireSelection(sequence, store, signal, progress) {
   for (const [i, frame] of sequence.frames.entries()) {
     progress(`Fetching frame ${i + 1}/${sequence.frames.length}…`);
     acquired.push(await store.get(frame, signal));
+    if (acquired.reduce((sum, entry) => sum + entry.blob.size, 0) > 50000000) throw Error('Selection exceeds 50 MB. Choose fewer hours.');
   }
   await validate();
   if (acquired.some(entry => entry.width !== acquired[0].width || entry.height !== acquired[0].height)) throw Error('Image dimensions differ within the sequence.');

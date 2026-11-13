@@ -12,7 +12,7 @@ export function attachExports({ store, selection, currentIndex, stop }) {
     const progress = text => { $('export-status').textContent = text; };
     try {
       const kind = button.dataset.export;
-      const settings = { size: Number($('export-size').value), fps: Number(document.querySelector('[data-speed][aria-pressed=true]').textContent), bitrate: Number($('export-quality').value), timestamps: $('export-timestamps').checked, gapPolicy: $('export-gap').value };
+      const settings = { size: Number($('export-size').value), fps: Number($('fps').value), bitrate: Number($('export-quality').value), timestamps: $('export-timestamps').checked, gapPolicy: $('export-gap').value };
       const chosen = kind === 'frame' ? { ...sequence, frames: [sequence.frames[currentIndex()]] } : sequence;
       progress('Checking observations…'); const entries = await acquireSelection(chosen, store, job.signal, progress);
       const result = await exportMedia(kind, chosen, entries, settings, job.signal, progress); job.signal.throwIfAborted();

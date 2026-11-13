@@ -47,3 +47,11 @@ TCR uses the minimum credit explicitly allowed at the bottom of JMA's catalogue
 when the complete explanation/references are impractical in a compact output:
 JMA, NOAA/NESDIS and CSU/CIRA. The fuller material accompanies source details,
 manifests and image packages. This does not extend rights to other providers.
+
+## Full-disc water vapour and colour
+
+Full-disc B08 and True Color Reproduction use their own JMA product IDs and
+rolling image paths; they do not reuse B13 pixels. Both retain full-disc framing.
+TCR carries the same JMA, NOAA/NESDIS and CSU/CIRA credits described above.
+Only Himawari-9 is currently integrated; Full disc and Australia select region,
+not satellite. Additional satellites remain future integration work.

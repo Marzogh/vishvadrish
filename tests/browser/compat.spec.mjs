@@ -5,9 +5,10 @@ async function start(page, options={}) {
 }
 for(const scenario of ['baseline','large-high-max','hold-no-timestamps']) test(`compatibility ${scenario}`,async({page},info)=>{
  await start(page,{extended:scenario==='large-high-max'});
+ await page.locator('#fps').selectOption('2');
  if(scenario==='large-high-max'){
-  await page.getByRole('button',{name:'Latest 24 observations',exact:true}).click();await expect(page.locator('#image')).toBeVisible();
-  await page.getByRole('button',{name:'4 frames per second',exact:true}).click();await page.locator('#export-size').selectOption('1100');await page.locator('#export-quality').selectOption('3000000');
+  await page.locator('#hours').fill('All available');await page.locator('#hours').press('Tab');await expect(page.locator('#image')).toBeVisible();
+  await page.locator('#fps').selectOption('4');await page.locator('#export-size').selectOption('1100');await page.locator('#export-quality').selectOption('3000000');
  }
  if(scenario==='hold-no-timestamps'){await page.locator('#export-gap').selectOption('hold');await page.locator('#export-timestamps').uncheck();}
  await page.locator('[data-export="video"]').click();

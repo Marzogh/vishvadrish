@@ -101,7 +101,7 @@ test('live JMA discovery, cross-origin pixels and navigation', async ({ page }, 
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('live-mobile.png'), fullPage: true });
-  await page.getByRole('button',{name:'Latest 6 observations',exact:true}).click();await expect(page.locator('#image')).toBeVisible();await saveAction(page,'video');
+  await page.locator('#hours').fill('1');await page.locator('#hours').press('Tab');await expect(page.locator('#image')).toBeVisible();await saveAction(page,'video');
   await expect(page.locator('#export-video')).toHaveJSProperty('duration',3);
   const saving=page.waitForEvent('download');await page.locator('#export-file').click();await (await saving).saveAs(testInfo.outputPath('live-six-frames.webm'));
 });
@@ -109,13 +109,13 @@ test('live JMA discovery, cross-origin pixels and navigation', async ({ page }, 
 test('compact inline choices change frame count and speed; icon buttons remain usable', async ({ page }) => {
   await fixtures(page, { extended: true }); await page.goto('/');
   await expect(page.locator('#image')).toBeVisible();
-  await page.getByRole('button', { name: 'Latest 6 observations', exact: true }).click();
+  await page.locator('#hours').fill('1');await page.locator('#hours').press('Tab');
   await expect(page.locator('#position')).toHaveText('6 / 6');
-  await expect(page.getByRole('button', { name: 'Latest 6 observations', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: 'Latest 24 observations', exact: true }).click();
+  await expect(page.locator('#hours')).toHaveValue('1');
+  await page.locator('#hours').fill('All available');await page.locator('#hours').press('Tab');
   await expect(page.locator('#position')).toHaveText('24 / 24');
-  await page.getByRole('button', { name: '4 frames per second', exact: true }).click();
-  await expect(page.getByRole('button', { name: '4 frames per second', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#fps').selectOption('4');
+  await expect(page.locator('#fps')).toHaveValue('4');
   await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
   await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1.5, 0, 0, 1.5, 0, 0)');
   await page.getByRole('button', { name: 'Fit', exact: true }).click();
@@ -128,6 +128,7 @@ test('compact inline choices change frame count and speed; icon buttons remain u
 });
 
 async function saveAction(page, kind) {
+  await page.locator('#fps').selectOption('2');
   await page.locator('.save summary').click();
   await page.locator(`[data-export="${kind}"]`).click();
   await expect(page.locator('#export-file')).toBeVisible({ timeout: 25000 });
@@ -167,6 +168,6 @@ test('export cancellation and acquisition failure leave no downloadable partial 
   await fixtures(page,{delay:true});await page.goto('/');await expect(page.locator('#image')).toBeVisible();
   await page.locator('.save summary').click();await page.locator('[data-export="zip"]').click();await expect(page.locator('#export-cancel')).toBeVisible();await page.locator('#export-cancel').click();
   await expect(page.locator('#export-status')).toHaveText('Export cancelled.');await expect(page.locator('#export-result')).toBeHidden();
-  await page.route('**/fd__b13_2350.jpg',route=>route.fulfill({status:404}));await page.locator('[data-export="zip"]').click();
+  await page.route('**/fd__*_2350.jpg',route=>route.fulfill({status:404}));await page.locator('[data-export="zip"]').click();
   await expect(page.locator('#export-error')).toContainText('HTTP 404');await expect(page.locator('#export-result')).toBeHidden();
 });
