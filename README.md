@@ -1,155 +1,237 @@
-# Viśvadṛś
+# Viśvadṛś | विश्वदृश्
 
-दूराद् धरायाः स्पन्दनम्
+दूराद् धरायाः स्पन्दनम् · *Earth's pulse from afar.*
 
 ![Viśvadṛś: open-source Earth observation](assets/brand/vishvadrish-readme-header.png)
 
-Satellite imagery exploration, downloads and browser-based time-lapse creation.
+Explore weather-satellite imagery, watch the clouds change and make your own
+time-lapse videos. Viśvadṛś brings together current Himawari-9 views from JMA
+and historical colour imagery from NICT. Images are retrieved on your device,
+and videos are created in your browser.
 
-The viewer supports JMA Himawari-9 full-disc and Australia regional B13 infrared, B08 water vapour and True Color Reproduction. It discovers
-dated observations directly from JMA and provides a timeline, playback, zoom, pan,
-source credit and recoverable loading errors. Image identity is not independently
-verified: compare the catalogue time with the timestamp printed in the image.
-The Save menu exports a PNG frame, a ZIP image sequence with a provenance manifest, or a browser-encoded WebM video. Other products and the optional HTTP service remain unfinished.
+**[Open Viśvadṛś](https://marzogh.github.io/vishvadrish/)**
 
-## Open the viewer
+No project account or video-processing service is required. You can also run
+the viewer locally from this repository.
 
-With Node.js 20 or newer installed, run:
+## What you can explore
+
+| View | Imagery |
+| --- | --- |
+| Full disc | JMA Himawari-9 True Color Reproduction, B13 infrared and B08 water vapour. |
+| Australia | The same three JMA products in a fixed regional view covering mainland Australia and Tasmania. |
+| History | NICT's archived, pre-rendered full-disc colour imagery at 550 × 550 pixels, in ten-minute steps. Requires the History extension. |
+
+Colour imagery shows the daylight side of Earth; night-time areas can be dark.
+True Color Reproduction is a processed composite, rather than an ordinary
+camera photograph. Infrared shows cloud patterns by day and night, but the
+image brightness is not a calibrated temperature measurement. Water vapour
+shows upper-atmosphere patterns, rather than surface humidity.
+
+**More satellite views are coming:** India is next, followed by Africa,
+Europe and the Americas. These are planned additions, not currently available
+views.
+
+## Start exploring
+
+1. Choose a **Region** and **Product**.
+2. Choose **End** and **Hours** to select observations from JMA's available
+   catalogue. **All available** selects everything up to the chosen end time.
+3. Move the timeline slider, step through observations, or press **Play**.
+   Playback buffers the selection first, with progress and a cancel button.
+4. Open **Save** to download a frame, a sequence of images or a WebM video.
+
+Use **fps** to change playback and video-export speed. Zoom, pan and fullscreen
+help you inspect the imagery; zooming does not crop your exports. In fullscreen,
+move the pointer or press a key to reveal the controls. The theme icon cycles
+through System, Light and Dark.
+
+For keyboard access, focus the timeline and use its arrow keys. In the image
+view, use **+ / −** to zoom, **arrow keys** to pan and **0** to fit.
+
+## Explore historical imagery
+
+Choose **History**, set a **Date (UTC)** and **Start/End** times, then press
+**Load**. Times must fall on ten-minute boundaries, such as 03:00 or 03:10;
+the end time is included. UTC may differ from the time on your local clock.
+Once loading finishes, use the same timeline,
+playback and Save controls. Choose **Live JMA** to return to current imagery.
+
+Historical imagery needs the **Viśvadṛś History** browser extension. If it is
+missing, the viewer opens setup instructions. You can reopen them using
+**Extension help**.
+
+### Why the extra setup?
+
+I'm sorry there's an extra step here. NICT's archive doesn't let an ordinary
+web page download its pictures for video creation. The extension lets your
+browser retrieve those pictures directly, so your images and videos don't need
+to pass through a server I run. Video creation stays on your device too.
+
+You only need the extension for History. Current JMA imagery works without it.
+JMA and NICT still receive the requests for their pictures; this is not anonymous
+access to those services.
+
+If you're using someone else's computer, ask its owner before installing the
+extension. If you're unsure about a step, ask someone to help.
+
+### Chrome
+
+1. Open **History** in the viewer and download the Chrome extension from the
+   setup instructions.
+2. Open the ZIP file to extract it. Keep the extracted folder somewhere you
+   won't accidentally delete it.
+3. Type `chrome://extensions` into Chrome's address bar and press Enter.
+4. Turn on **Developer mode**.
+5. Choose **Load unpacked**, then select the extracted folder containing
+   `manifest.json`.
+6. Allow access to NICT if Chrome asks. Return to Viśvadṛś and reload the page.
+
+Keep that folder while you use the extension. To update it, replace its contents
+with the new download and press **Reload** on the extension's entry in Chrome.
+
+### Firefox and Zen
+
+1. Open **History** in the viewer and download the signed Firefox extension
+   from the setup instructions. Use this package for Zen too.
+2. Open your browser's **Add-ons and themes** page. In Firefox, you can type
+   `about:addons` into the address bar.
+3. Open the tools menu, shown as a cog, and choose **Install Add-on From File**.
+4. Select the downloaded `.xpi` file, approve installation and allow access to
+   NICT when prompted.
+5. Return to Viśvadṛś and reload the page.
+
+Use the signed package for normal installation. The History extension does not
+support Safari or mobile browsers. See [historical imagery](docs/HISTORICAL_IMPORT.md)
+for more detail.
+
+## Save images and video
+
+| Output | Contents |
+| --- | --- |
+| PNG frame | The current observation with source credit. |
+| ZIP image sequence | Selected PNG frames, attribution and a JSON provenance manifest. |
+| WebM video | Selected observations encoded locally, with a preview and downloadable manifest. |
+
+Choose a 550 or 1100 px image width, video quality and playback rate. For gaps,
+choose **Skip** or **Hold previous**. Timestamp text is optional; required source
+credit is always included in an additional 56 px strip. Output height follows
+the selected region's aspect ratio. Enlarging a historical image does not add
+detail beyond its 550 × 550 source.
+
+WebM uses VP9 or VP8 according to browser support. MP4 is not available. If your
+browser cannot encode video, use the image sequence instead. Cancellation stops
+the job without offering a partial download.
+
+## Coverage, timing and limits
+
+- **JMA's live catalogue is not a long-term archive.** Hours selects from its
+  available observations. Use History for an earlier date.
+- **Times need care.** JMA catalogue labels mark scan end; filename slots mark
+  scan start, ten minutes earlier. JMA reuses image URLs, and printed image
+  timestamps are not independently read. Historical NICT times are provider
+  URL slots; their exact scan-start/end meaning is unverified.
+- **Archive coverage can have gaps.** Missing NICT requests are counted and
+  skipped. Other loading failures leave the previous sequence available.
+  The archive's earliest date and continuous coverage are not guaranteed;
+  valid image placeholders are not independently detected.
+- **History selections stay within one UTC date.** Choose up to 144 ten-minute
+  slots. Images are limited to 5 MB each and 50 MB per sequence, so a whole day
+  may not fit. Historical imagery is colour only, for non-commercial use.
+- **Exports and playback are bounded.** Export output is capped at 50 MB and
+  144 output frames, including held gaps. Decoded playback has a separate
+  256 MB memory limit. Shorten the selection or reduce output size if needed.
+- **Regional geometry is provider-supplied.** Australia's raster covers
+  110–155°E and 10–45°S. Exact map projection and pixel conventions remain
+  unverified; no coordinate overlays or reprojection are applied.
+
+Live images can be reused across refreshes in the same tab session through a
+bounded browser cache. Historical images stay in memory until replaced or the
+page closes or reloads. Neither is a personal archive of downloaded observations.
+
+Chromium has automated playback and export coverage. Safari and Zen have passed
+baseline live JMA export checks; historical acquisition and encoding have also
+been exercised through the Firefox package in Zen. Physical phones and tablets
+have not been tested. See [browser support](docs/browser-support.md) for the
+specific checks and limitations.
+
+## Run locally
+
+Install **Node.js 20 or newer**, then run:
 
 ```sh
+git clone https://github.com/Marzogh/vishvadrish.git
+cd vishvadrish
+npm ci
 npm run dev
 ```
 
-Open the printed loopback URL. The preview server serves local files only; the
-browser fetches imagery directly from JMA. Stop it with Ctrl+C. Product access
-requires an internet connection. Playback advances after each frame loads, so
-the selected playback rate is a target rather than precise video timing.
+Open the local URL printed in the terminal. Keep it running while using the
+viewer; press **Ctrl+C** to stop it. Internet access is needed for provider
+imagery. History uses the extension here too; no local acquisition server or
+manual image import is needed.
 
-Use the timeline arrow keys to select observations. Focus the image view and
-press plus/minus to zoom, arrow keys to pan, or zero to fit. Pointer dragging also
-pans. The viewer retains at most 12 image URLs and 24 acquired image blobs (up to 50 MB) and selects observations by catalogue-limited Hours. Refresh is required after five minutes before further
-image requests. This guard does not independently verify a rolling URL's contents.
+## Static hosting and embedding
 
-## Run the checks
+```sh
+npm run build
+```
 
-Install Node.js 20 or newer, then run from the repository root:
+The build prints its progress and writes a static site to `dist/`. Publish that
+directory's contents. Fonts and runtime dependencies are bundled locally; no
+observational imagery or generated videos are included. The build does not
+publish the site or produce a Mozilla-signed extension.
+
+Relative asset paths support hosting under a project subdirectory. Region and
+product choices are included in the URL, for example
+`?region=australia&product=b13`. Add `&embed=1` for a compact article view with
+an **Open viewer** link. Use the standalone viewer for History setup. The History
+extension recognises the project's GitHub Pages address and local previews;
+hosting the viewer elsewhere requires corresponding extension configuration.
+
+See [static hosting and embedding](docs/static-hosting.md) for iframe markup,
+fullscreen permissions and social-preview configuration, and
+[historical imagery](docs/HISTORICAL_IMPORT.md) for extension packaging.
+
+## Development
+
+Run the core tests:
 
 ```sh
 npm test
 ```
 
-No dependency installation is required for unit tests. Run `npm ci` before starting the viewer or building it. The test runner prints each test result
-and a final pass/fail count. Tests use synthetic metadata and do not fetch imagery
-or write production files.
-
-For Chromium browser tests, install the locked development dependency and browser:
+For Chromium browser tests, install the dependencies and browser, then choose
+an output directory outside the checkout:
 
 ```sh
 npm ci
 npx playwright install chromium
+export VISHVADRISH_TEST_OUTPUT="$(mktemp -d)"
+printf 'Browser test output: %s\n' "$VISHVADRISH_TEST_OUTPUT"
+npm run test:browser
 ```
 
-Set `VISHVADRISH_TEST_OUTPUT` to an absolute directory outside the application
-directory, then run `npm run test:browser`. It builds the static site before testing it. The test runner prints individual
-results. The default suite uses synthetic images and catalogue responses; the
-live provider test is explicitly skipped. Set `JMA_LIVE=1` to include direct JMA
-discovery, image loading and pixel-access checks. Screenshots and failure traces
-go to the configured output directory. The tests start and stop a loopback server
-on port 4173 by default. Set `VISHVADRISH_TEST_PORT` to use another port.
+The browser-test command builds the static site first and prints individual
+results. Screenshots and failure traces go to `VISHVADRISH_TEST_OUTPUT`.
+Default browser fixtures do not require live imagery. Set `JMA_LIVE=1` to include
+the opt-in live JMA checks. Set `VISHVADRISH_TEST_PORT` to change the default
+local test port, 4173.
 
-## Programmatic use
+Browser modules expose provider discovery and sequence selection for
+programmatic use. A self-hosted HTTP API, general local-sequence import and
+additional providers remain future work. See [architecture](docs/architecture.md),
+[source support](docs/sources.md) and [third-party components](docs/third-party.md).
 
-In a browser module, `discoverJma()` from `src/providers/jma.mjs` retrieves the
-provider's actual dated observation options. It accepts an `AbortSignal`. Outside
-a browser, supply parsed `{ slot, label }` options to `framesFromJmaOptions()`.
+## Licence and credit
 
-`createSequence()` from `src/core/sequence.mjs` selects frames by inclusive UTC
-range and sampling step, requires an explicit frame limit and gap policy, and
-freezes the output geometry and provenance. It records a selection; it does not
-retrieve or validate image pixels, apply gap handling, or generate media.
+Application code is [MIT-licensed](LICENSE). Provider imagery has separate terms
+and attribution requirements; the code licence does not grant imagery rights.
+Historical NICT imagery is supported for non-commercial use.
 
-See [architecture](docs/architecture.md) and [source support](docs/sources.md).
+JMA is credited for its imagery. True Color Reproduction also retains
+NOAA/NESDIS and CSU/CIRA credit. Historical exports retain NICT, JMA and CEReS
+credit. Fuller acknowledgements accompany source details, manifests and image
+packages. See [source support](docs/sources.md).
 
-## Licence
-
-Application code is MIT-licensed. Provider imagery has separate terms and
-attribution requirements. No satellite imagery is included in this repository.
-
-## Exports and static build
-
-Open Save to choose a frame, image sequence or WebM video. Video uses the selected
-playback rate and all selected frames. Choose 550 or 1100 px imagery width,
-Standard or High quality, and skip gaps or hold the previous image. The output
-adds a 56 px source-credit strip. Timestamp text can be hidden; source credit is
-always retained. PNG and ZIP use the selected size; quality applies to video.
-Download links appear after processing, together with a JSON provenance manifest.
-The video can be previewed before downloading. Cancel export stops the job without
-offering partial output. Jobs are limited to 144 observations, 144 held output
-frames and 50 MB result size. ZIP packaging and video finalisation use memory;
-this is not an unlimited streaming exporter.
-
-WebM tries VP9, then VP8, using browser capability checks. MP4 is not offered.
-If neither encoder is supported, use the image sequence. Chromium has automated export coverage; installed Safari and Zen passed baseline live exports. Physical mobile devices remain untested. See [browser support](docs/browser-support.md) for the exact matrix. Catalogue and
-filename times describe scan end and scan start respectively, ten minutes apart.
-Exports retain acquired bytes and catalogue associations, not an independent
-reading of timestamps printed in the pixels.
-
-Run `npm run build` to prepare a static site in `dist/`. Only index.html, src/, assets/
-and prepared vendor files are included. Nothing is published by this command.
-Dependencies are copied locally; the browser does not import them from a CDN.
-
-## Australia views
-
-Use Region and Product above the image. End selects an actual dated catalogue
-observation; Hours selects the observations ending there. Colour may be
-blank at night: choose an earlier end time or infrared. Blank/dark colour frames
-are rejected, not replaced with a different band.
-
-Australia uses JMA's fixed 901 × 701 raster covering 110–155°E, 10–45°S. This
-includes mainland Australia and Tasmania, not all external territories. Exact CRS
-and pixel conventions are unverified; no coordinate overlays or reprojection are
-applied. Export width preserves the raster aspect ratio; height is rounded to an
-even pixel count for video, then adds 56 px for source credit. A 550 px Australia
-export is 550 × 484. Preview pan/zoom does not alter the selected export extent.
-
-TCR outputs always retain JMA, NOAA/NESDIS and CSU/CIRA credit. Source information,
-JSON manifests and the image package's ATTRIBUTION.txt include the composite
-explanation, collaboration acknowledgement and references required by JMA.
-
-Hours is an editable preset field, defaulting to All available. It selects actual observations ending at End. Numeric durations are limited to the current JMA catalogue, not an assumed multi-day archive. The viewer shows available hours and resulting frame count. A selection is capped at 144 observations and 50 MB of acquired imagery.
-
-Play buffers the complete selected sequence before starting, with progress and cancellation. Decoded display frames are capped at 700 px width and 256 MB estimated RGBA storage, alongside the 50 MB acquired-image limit. Exports retain original acquired pixels. Playback performs no image network requests and keeps the previous frame visible while preparing. Changing the selection releases the display buffer.
-
-The viewer starts with True Color Reproduction and 4 fps. The fps dropdown offers 1, 2, 4, 6, 8 and 10 for both playback and video export. Fullscreen expands the viewer and keeps the timeline and playback controls floating over the image. Use Exit fullscreen or Escape to leave it.
-
-In fullscreen, translucent controls fade after two seconds without activity. Pointer movement, touch or keyboard interaction reveals them again.
-
-Validated images are cached locally across refreshes in the same tab session,
-keyed by dated observation, region and product, not rolling filename alone.
-The catalogue is still fetched to discover new observations; only missing images
-are downloaded. Closing the tab ends its cache identity. A newly opened tab does
-not reuse that session. Browser storage cannot reliably be erased at the exact
-moment a tab closes: old bytes are capped at 50 MB across sessions and expire
-after 24 hours, with cleanup on subsequent cache writes. This is not an archive.
-If browser storage is unavailable, a visible notice explains the memory-only
-fallback. Failed or invalid image responses are not saved.
-
-## Website integration
-
-The viewer uses locally bundled IBM Plex Sans, Mono and Sans Devanagari.
-Use the theme icon to cycle through System, Light and Dark. System follows the device preference;
-an explicit choice is saved for this viewer independently of chipsncode and
-Nabhastala. Browser storage restrictions do not prevent changing the theme for
-the current page. The image surround remains dark in both themes.
-
-Region and Product update the page URL. For example,
-`?region=australia&product=b13` opens Australia infrared, while
-`?region=full-disc&product=trm` opens full-disc colour. These links select a
-product, not a fixed historical observation. Invalid choices produce a visible
-notice and fall back to the supported defaults.
-
-Add `&embed=1` for a compact article embed. The embedded viewer retains its name,
-theme selection, source attribution and normal controls, with an Open viewer link
-that opens the same region/product in a standalone tab. See
-[static hosting and embedding](docs/static-hosting.md) for publication paths,
-iframe permissions and build instructions. The supplied project icon, favicons, Apple touch icon and social-preview artwork are bundled under `assets/`.
+A [Chips’nCode](https://chipsncode.com/) project.
