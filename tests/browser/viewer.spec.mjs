@@ -66,7 +66,7 @@ test('mobile, forced colours, reduced motion and contrast', async ({ page }, tes
     const style = getComputedStyle(document.documentElement);
     const rgb = name => style.getPropertyValue(name).trim().match(/[0-9a-f]{2}/gi).map(v => parseInt(v, 16) / 255);
     const luminance = name => rgb(name).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
-    return ['--text', '--muted', '--accent', '--error', '--line'].map(name => ({ name, ratio: (luminance(name) + .05) / (luminance('--bg') + .05) }));
+    return ['--text', '--muted', '--accent', '--error', '--line'].map(name => ({ name, ratio: (Math.max(luminance(name), luminance('--bg')) + .05) / (Math.min(luminance(name), luminance('--bg')) + .05) }));
   });
   for (const { name, ratio } of ratios) expect(ratio, name).toBeGreaterThanOrEqual(name === '--line' ? 3 : 4.5);
   await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce', contrast: 'more' });

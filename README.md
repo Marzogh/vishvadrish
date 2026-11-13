@@ -48,12 +48,12 @@ npx playwright install chromium
 ```
 
 Set `VISHVADRISH_TEST_OUTPUT` to an absolute directory outside the application
-directory, then run `npm run test:browser`. The test runner prints individual
+directory, then run `npm run test:browser`. It builds the static site before testing it. The test runner prints individual
 results. The default suite uses synthetic images and catalogue responses; the
 live provider test is explicitly skipped. Set `JMA_LIVE=1` to include direct JMA
 discovery, image loading and pixel-access checks. Screenshots and failure traces
 go to the configured output directory. The tests start and stop a loopback server
-on port 4173; stop any existing preview on that port first.
+on port 4173 by default. Set `VISHVADRISH_TEST_PORT` to use another port.
 
 ## Programmatic use
 
@@ -92,7 +92,7 @@ filename times describe scan end and scan start respectively, ten minutes apart.
 Exports retain acquired bytes and catalogue associations, not an independent
 reading of timestamps printed in the pixels.
 
-Run `npm run build` to prepare a static site in `dist/`. Only index.html, src/
+Run `npm run build` to prepare a static site in `dist/`. Only index.html, src/, assets/
 and prepared vendor files are included. Nothing is published by this command.
 Dependencies are copied locally; the browser does not import them from a CDN.
 
@@ -131,3 +131,23 @@ moment a tab closes: old bytes are capped at 50 MB across sessions and expire
 after 24 hours, with cleanup on subsequent cache writes. This is not an archive.
 If browser storage is unavailable, a visible notice explains the memory-only
 fallback. Failed or invalid image responses are not saved.
+
+## Website integration
+
+The viewer uses locally bundled IBM Plex Sans, Mono and Sans Devanagari.
+Use the theme icon to cycle through System, Light and Dark. System follows the device preference;
+an explicit choice is saved for this viewer independently of chipsncode and
+Nabhastala. Browser storage restrictions do not prevent changing the theme for
+the current page. The image surround remains dark in both themes.
+
+Region and Product update the page URL. For example,
+`?region=australia&product=b13` opens Australia infrared, while
+`?region=full-disc&product=trm` opens full-disc colour. These links select a
+product, not a fixed historical observation. Invalid choices produce a visible
+notice and fall back to the supported defaults.
+
+Add `&embed=1` for a compact article embed. The embedded viewer retains its name,
+theme selection, source attribution and normal controls, with an Open viewer link
+that opens the same region/product in a standalone tab. See
+[static hosting and embedding](docs/static-hosting.md) for publication paths,
+iframe permissions and build instructions. Product icons and sharing artwork remain to be supplied.

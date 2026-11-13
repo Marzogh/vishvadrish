@@ -1,7 +1,7 @@
 import { preparePlayback } from './playback.mjs';
 import { FrameStore } from '../export/frames.mjs';
 import { attachExports } from '../export/actions.mjs';
-import { discoverJma, himawariB13, products, getProduct, tcrAcknowledgement } from '../providers/jma.mjs';
+import { discoverJma, products, getProduct, tcrAcknowledgement } from '../providers/jma.mjs';
 import { observationStatus } from '../core/metadata.mjs';
 import { createSequence } from '../core/sequence.mjs';
 
@@ -9,7 +9,28 @@ const $ = id => document.getElementById(id);
 const controls = ['previous', 'play', 'next', 'timeline', 'zoom-in', 'zoom-out', 'fit'];
 const cache = new Map();
 const store = new FrameStore();
-let product = getProduct('jma.himawari9.full-disc.trm');
+const link = new URL(location.href);
+const requestedRegion = link.searchParams.get('region');
+const requestedBand = link.searchParams.get('product');
+const initialRegion = requestedRegion === 'australia' ? 'australia' : 'full-disc';
+const initialBand = ['b13', 'b08', 'trm'].includes(requestedBand) ? requestedBand : 'trm';
+let product = getProduct(`jma.himawari9.${initialRegion}.${initialBand}`);
+$('region').value = initialRegion;
+const linkWarnings = [];
+if (requestedRegion && !['full-disc', 'australia'].includes(requestedRegion)) linkWarnings.push('Unknown region in link. Showing Full disc.');
+if (requestedBand && !['b13', 'b08', 'trm'].includes(requestedBand)) linkWarnings.push('Unknown product in link. Showing True Color Reproduction.');
+if (linkWarnings.length) {
+  $('link-status').textContent = linkWarnings.join(' ');
+  $('link-status').hidden = false;
+}
+function updateLink() {
+  const url = new URL(location.href);
+  url.searchParams.set('region', $('region').value);
+  url.searchParams.set('product', product.band.toLowerCase());
+  history.replaceState(null, '', url);
+  url.searchParams.delete('embed');
+  $('standalone').href = url.href;
+}
 let catalogue = [], sequence, index = 0, playing = false, timer, request, revision = 0;
 let frameDelay = 250;
 let playback, preparing, preparationRevision = 0;
@@ -219,6 +240,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) stop(
 const exportActions = attachExports({ store, selection: () => sequence, currentIndex: () => index, stop: () => { stop(); request?.abort(); revision++; $('cancel').hidden = true; } });
 function updateProduct() {
   product = getProduct($('product').value);
+  updateLink();
   $('image').alt = `Himawari-9 ${$('region').selectedOptions[0].textContent} ${product.name}`;
   document.querySelector('.credit a').href = product.sourceUrl;
   $('product-description').textContent = product.description || 'B13 shows cloud patterns day and night. Brightness is not calibrated temperature.';
