@@ -14,9 +14,9 @@ imply that JMA created them. The application's MIT licence does not license imag
 
 | Capability | Status |
 | --- | --- |
-| Dated discovery | Conversion implemented; browser integration not yet tested in this app |
+| Dated discovery | Implemented and tested in Chromium |
 | Direct provider access | Fresh HTTP catalogue and JPEG requests succeeded with permissive CORS headers |
-| Browser image/canvas access | Demonstrated in an earlier desktop Chromium experiment; current app unqualified |
+| Browser image/canvas access | Current viewer passed live desktop Chromium loading, navigation and pixel readback |
 | Pixel observation identity and dimensions | Not validated by this implementation |
 | Downloads, video and API | Not implemented |
 | Australia regional products, colour, water vapour | Require separate access, attribution and geometry checks |
@@ -27,6 +27,9 @@ slot separately; it does not infer observation time from filenames. These URLs
 are rolling locators, not archives. HTTP success and CORS headers do not establish
 that pixels match a requested observation or qualify a complete browser workflow.
 
-No Safari, Firefox, mobile, public static-host or video-export qualification is
-claimed. IMD public integration is unavailable pending affirmative permission.
+Responsive layout, keyboard controls, forced colours, reduced motion, palette
+contrast and colour-vision simulations are checked in Chromium using synthetic
+fixtures. These checks do not qualify a physical mobile device or another browser.
+No Safari, Firefox, public static-host or video-export qualification is claimed.
+IMD public integration is unavailable pending affirmative permission.
 Other providers are not integrated. No maintainer-hosted proxy is used.

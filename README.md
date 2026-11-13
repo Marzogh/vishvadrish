@@ -4,9 +4,30 @@
 
 Satellite imagery exploration, downloads and browser-based time-lapse creation.
 
-The project is at the foundation stage. It currently contains reusable metadata,
-JMA observation discovery and immutable sequence selection. There is no viewer,
-image download workflow, video exporter, HTTP service or deployment package yet.
+The first viewer supports JMA Himawari-9 full-disc B13 infrared imagery. It discovers
+dated observations directly from JMA and provides a timeline, playback, zoom, pan,
+source credit and recoverable loading errors. Image identity is not independently
+verified: compare the catalogue time with the timestamp printed in the image.
+Downloads, video export, other products and the optional HTTP service are unfinished.
+
+## Open the viewer
+
+With Node.js 20 or newer installed, run:
+
+```sh
+npm run dev
+```
+
+Open the printed loopback URL. The preview server serves local files only; the
+browser fetches imagery directly from JMA. Stop it with Ctrl+C. Product access
+requires an internet connection. Playback advances after each frame loads, so
+the selected playback rate is a target rather than precise video timing.
+
+Use the timeline arrow keys to select observations. Focus the image view and
+press plus/minus to zoom, arrow keys to pan, or zero to fit. Pointer dragging also
+pans. The viewer retains at most 12 image blobs and offers the latest 6, 12 or 24
+catalogued observations. Refresh is required after five minutes before further
+image requests. This guard does not independently verify a rolling URL's contents.
 
 ## Run the checks
 
@@ -19,6 +40,21 @@ npm test
 No dependency installation is required. The test runner prints each test result
 and a final pass/fail count. Tests use synthetic metadata and do not fetch imagery
 or write production files.
+
+For Chromium browser tests, install the locked development dependency and browser:
+
+```sh
+npm ci
+npx playwright install chromium
+```
+
+Set `VISHVADRISH_TEST_OUTPUT` to an absolute directory outside the application
+directory, then run `npm run test:browser`. The test runner prints individual
+results. The default suite uses synthetic images and catalogue responses; the
+live provider test is explicitly skipped. Set `JMA_LIVE=1` to include direct JMA
+discovery, image loading and pixel-access checks. Screenshots and failure traces
+go to the configured output directory. The tests start and stop a loopback server
+on port 4173; stop any existing preview on that port first.
 
 ## Programmatic use
 
