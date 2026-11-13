@@ -1,0 +1,5 @@
+import{test,expect}from'@playwright/test';import{fixtures}from'./fixtures.mjs';
+for(const theme of ['light','dark'])test(`shared page frame and compact identity in ${theme}`,async({page},info)=>{
+ await page.emulateMedia({colorScheme:theme});await fixtures(page);await page.goto('/');await expect(page.locator('#image')).toBeVisible();
+ for(const width of [320,390,1280,1920]){await page.setViewportSize({width,height:900});const box=await page.evaluate(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return{x:r.x,right:r.right,height:r.height}};return{header:rect('.site-header'),main:rect('main'),footer:rect('.site-footer'),sa:rect('.sanskrit-lockup'),latin:rect('.latin-lockup'),play:rect('#play'),overflow:document.documentElement.scrollWidth>innerWidth}});expect(box.overflow).toBe(false);expect(box.header.x).toBeCloseTo(box.main.x,1);expect(box.footer.right).toBeCloseTo(box.main.right,1);expect(box.sa.x).toBeLessThan(box.latin.x);expect(box.play.height).toBeLessThanOrEqual(40);if(width>=1280)expect(box.header.height).toBeLessThanOrEqual(80);await page.screenshot({path:info.outputPath(`${theme}-${width}.png`),fullPage:true});}
+});

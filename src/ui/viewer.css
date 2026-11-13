@@ -41,14 +41,15 @@ button:disabled{opacity:.5;cursor:default}
 .skip:focus{position:absolute;z-index:20;background:var(--bg);padding:8px}
 svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-.site-header{min-height:88px;margin:0 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line);padding:12px 0}
-.brand-icon{display:block;flex:none;width:48px;height:48px}
-.identity{display:flex;align-items:center;gap:24px}
+.site-header{min-height:64px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line);padding:12px 0}
+.brand-icon{display:block;flex:none;width:32px;height:32px}
+.identity{display:flex;align-items:center;gap:12px}
 .latin-lockup,.sanskrit-lockup{display:flex;flex-direction:column;gap:1px}
-.name{font-size:28px;line-height:1.15;font-weight:500;letter-spacing:-.7px;color:var(--text);text-decoration:none;width:fit-content}
+.name{font-size:16px;line-height:1.15;font-weight:500;letter-spacing:-.7px;color:var(--text);text-decoration:none;width:fit-content}
 .sanskrit-lockup{font-family:'Plex Devanagari',sans-serif}
-.sanskrit-name{font-size:25px;line-height:1.35;font-weight:600}
-.motto{color:var(--muted);font-size:12px}
+.sanskrit-name{font-size:26px;line-height:1.35;font-weight:600}
+.motto{color:var(--muted);font-size:11px}
+.latin-lockup{border-left:1px solid var(--line);padding-left:12px}
 .site-nav{display:flex;align-items:center;justify-content:flex-end;gap:24px;font-size:13px}
 .site-nav>a{white-space:nowrap}
 .theme-toggle{color:var(--muted);padding:7px;min-width:36px;min-height:36px}
@@ -56,14 +57,15 @@ svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.6;fill:none;stroke
 .theme-toggle [data-theme-icon=system]{stroke:currentColor;stroke-width:1.6;fill:none}
 .name-row{display:flex;align-items:baseline;gap:3px}
 .identity-ref{text-decoration:none;font-size:11px}
-.site-footer{margin:12px 28px 0;padding:14px 0 20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.site-footer{margin:24px auto 0;padding:20px 0 24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
 .footer-context{display:flex;justify-content:space-between;align-items:center;gap:16px}
 .footer-context [lang=sa]{font-family:'Plex Devanagari',sans-serif;font-size:18px}
-.identity-translations{margin-top:10px}
+.identity-translations{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
 .identity-translations p{margin:3px 0;scroll-margin-top:16px}
 .identity-translations p:target{color:var(--text)}
 .standalone-link{display:none}
-main{margin:0 28px}
+:root{--page-gutter:clamp(14px,4.65vw,80px)}
+.site-header,main,.site-footer{width:calc(100% - 2 * var(--page-gutter));max-width:1440px;margin-inline:auto}
 h1{font:inherit;margin:0}
 .sourcebar{display:flex;align-items:center;gap:18px;min-height:54px;flex-wrap:wrap}
 .satellite{font-weight:600}
@@ -135,6 +137,7 @@ select option{color:var(--text);background:var(--bg)}
 :root[data-embed=true] .site-header{min-height:52px;padding:6px 0}
 :root[data-embed=true] .sanskrit-lockup,:root[data-embed=true] .motto,:root[data-embed=true] .chipsncode-link,:root[data-embed=true] .identity-ref,:root[data-embed=true] .site-footer{display:none}
 :root[data-embed=true] .name{font-size:22px}
+:root[data-embed=true] .latin-lockup{border:0;padding-left:0}
 :root[data-embed=true] .brand-icon{width:28px;height:28px}
 :root[data-embed=true] .identity{gap:10px}
 :root[data-embed=true] .standalone-link{display:inline}
@@ -154,15 +157,13 @@ select option{color:var(--text);background:var(--bg)}
   .transport .source{flex:1;justify-content:flex-end}
 }
 @media(max-width:620px){
-  .site-header{margin:0 14px;padding:12px 0;gap:12px}
-  .site-footer{margin-inline:14px}
+  .site-header{padding:10px 0;gap:12px}
   .identity{gap:10px}
   .brand-icon{width:32px;height:32px}
-  .name{font-size:25px}
+  .name{font-size:16px}
   .sanskrit-name{font-size:23px}
   .motto{font-size:10px}
   .site-nav{width:100%;justify-content:space-between;gap:12px;font-size:12px}
-  main{margin:0 14px}
   .sourcebar{gap:5px;min-height:58px;padding:8px 0;font-size:12px}
   .sourcebar select{font-size:12px;max-width:176px}
   .sourcebar .slash{display:none}
