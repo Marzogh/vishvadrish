@@ -183,11 +183,11 @@ observational imagery or generated videos are included. The build does not
 publish the site or produce a Mozilla-signed extension.
 
 The **GitHub Pages** workflow runs tests and builds `dist/` for pushes and pull
-requests to `main`. These runs do not publish. To publish later, select
-**GitHub Actions** as the repository's Pages source, then run the workflow from
-`main` with **Publish to GitHub Pages** selected. It uploads only `dist/` and
-publishes that artifact. The public viewer address is
-`https://chipsncode.com/vishvadrish/`.
+requests to `main`. A successful push to `main` automatically publishes the
+built site. Pull requests only test and build; they do not publish. You can also
+run the workflow manually from `main` to rebuild and publish. Set the
+repository's Pages source to **GitHub Actions**. Only `dist/` is uploaded for
+publication. The public viewer address is `https://chipsncode.com/vishvadrish/`.
 
 Relative asset paths support hosting under a project subdirectory. Region and
 product choices are included in the URL, for example
