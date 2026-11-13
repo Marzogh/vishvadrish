@@ -120,7 +120,7 @@ test('compact inline choices change frame count and speed; icon buttons remain u
   await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1.5, 0, 0, 1.5, 0, 0)');
   await page.getByRole('button', { name: 'Fit', exact: true }).click();
   await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
-  await expect(page.locator('.sourcebar select')).toHaveCount(0);
+  await expect(page.locator('.sourcebar select')).toHaveCount(2);
   for (const name of ['Play observations', 'Previous observation', 'Next observation', 'Refresh observations']) {
     const box = await page.getByRole('button', { name, exact: true }).boundingBox();
     expect(box.width).toBeGreaterThanOrEqual(24); expect(box.height).toBe(32);

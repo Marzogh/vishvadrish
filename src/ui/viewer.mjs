@@ -1,6 +1,6 @@
 import { FrameStore } from '../export/frames.mjs';
 import { attachExports } from '../export/actions.mjs';
-import { discoverJma, himawariB13 } from '../providers/jma.mjs';
+import { discoverJma, himawariB13, products, getProduct, tcrAcknowledgement } from '../providers/jma.mjs';
 import { observationStatus } from '../core/metadata.mjs';
 import { createSequence } from '../core/sequence.mjs';
 
@@ -8,6 +8,7 @@ const $ = id => document.getElementById(id);
 const controls = ['previous', 'play', 'next', 'timeline', 'zoom-in', 'zoom-out', 'fit'];
 const cache = new Map();
 const store = new FrameStore();
+let product = himawariB13;
 let catalogue = [], sequence, index = 0, playing = false, timer, request, revision = 0;
 let frameCount = 12, frameDelay = 500;
 let zoom = 1, panX = 0, panY = 0, drag;
@@ -87,9 +88,10 @@ async function show(next) {
 async function selectWindow() {
   stop();
   if (!catalogue.length) return;
-  const selected = catalogue.slice(-frameCount);
-  sequence = createSequence({ product: himawariB13, frames: selected, start: selected[0].observedAt,
-    end: selected.at(-1).observedAt, maxFrames: 24, grid: { kind: 'source-raster', width: 550, height: 550, fit: 'contain' }, gapPolicy: 'skip' });
+  exportActions();
+  const selected = catalogue.slice(0, Number($('end-at').value) + 1).slice(-frameCount);
+  sequence = createSequence({ product, frames: selected, start: selected[0].observedAt,
+    end: selected.at(-1).observedAt, maxFrames: 24, grid: { kind: 'source-raster', width: product.coverage.sourceWidth || 550, height: product.coverage.sourceHeight || 550, fit: 'contain' }, gapPolicy: 'skip' });
   $('timeline').max = sequence.frames.length - 1;
   $('frame-marks').replaceChildren(...sequence.frames.map(() => document.createElement('span')));
   $('frame-ticks').replaceChildren(...sequence.frames.map((frame, i) => { const option = document.createElement('option'); option.value = i; option.label = format(frame.observedAt); return option; }));
@@ -101,6 +103,8 @@ async function selectWindow() {
 }
 async function refresh() {
   stop(); sequence = undefined; catalogue = [];
+  exportActions();
+  $('end-at').disabled = true; $('end-at').replaceChildren();
   store.clear();
   for (const url of cache.values()) URL.revokeObjectURL(url); cache.clear();
   const { signal, token } = begin(); clearImage(); fit();
@@ -109,9 +113,11 @@ async function refresh() {
   $('start-time').textContent = $('end-time').textContent = ''; $('frame-marks').replaceChildren();
   $('placeholder').textContent = 'Loading observations…'; setStatus('Discovering JMA observations…');
   try {
-    const discovered = await discoverJma({ signal });
+    const discovered = await discoverJma({ signal, product });
     if (token !== revision) return;
     catalogue = discovered;
+    $('end-at').replaceChildren(...catalogue.map((frame, i) => { const option = document.createElement('option'); option.value = i; option.textContent = format(frame.observedAt); return option; }).reverse());
+    $('end-at').value = catalogue.length - 1; $('end-at').disabled = false;
     windowButtons.forEach(button => { button.disabled = false; });
     await selectWindow();
   } catch (error) {
@@ -151,5 +157,21 @@ $('viewport').onpointerdown = event => { if (event.target.closest('button') || $
 $('viewport').onpointermove = event => { if (!drag) return; panX = event.clientX - drag.x; panY = event.clientY - drag.y; transform(); };
 $('viewport').onpointerup = $('viewport').onpointercancel = () => { drag = undefined; };
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
-attachExports({ store, selection: () => sequence, currentIndex: () => index, stop: () => { stop(); request?.abort(); revision++; $('cancel').hidden = true; } });
+const exportActions = attachExports({ store, selection: () => sequence, currentIndex: () => index, stop: () => { stop(); request?.abort(); revision++; $('cancel').hidden = true; } });
+function updateProduct() {
+  product = getProduct($('product').value);
+  $('image').alt = `Himawari-9 ${$('region').selectedOptions[0].textContent} ${product.name}`;
+  document.querySelector('.credit a').href = product.sourceUrl;
+  $('product-description').textContent = product.description || 'B13 shows cloud patterns day and night. Brightness is not calibrated temperature.';
+  $('region-description').textContent = product.coverage.regionId ? 'Australia: 110–155°E, 10–45°S. Provider raster; exact CRS unverified. Mainland and Tasmania, not all external territories.' : '';
+  $('tcr-acknowledgement').hidden = product.band !== 'trm'; $('tcr-acknowledgement').textContent = product.band === 'trm' ? tcrAcknowledgement : '';
+  refresh();
+}
+$('region').onchange = () => {
+  const choices = products.filter(item => $('region').value === 'australia' ? item.coverage.regionId : !item.coverage.regionId);
+  $('product').replaceChildren(...choices.map(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = item.band === 'b13' ? 'B13 · Infrared' : item.name; return option; }));
+  updateProduct();
+};
+$('product').onchange = updateProduct;
+$('end-at').onchange = selectWindow;
 refresh();

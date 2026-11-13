@@ -4,7 +4,7 @@
 
 Satellite imagery exploration, downloads and browser-based time-lapse creation.
 
-The first viewer supports JMA Himawari-9 full-disc B13 infrared imagery. It discovers
+The viewer supports JMA Himawari-9 full-disc B13 infrared and Australia regional B13 infrared, B08 water vapour and True Color Reproduction. It discovers
 dated observations directly from JMA and provides a timeline, playback, zoom, pan,
 source credit and recoverable loading errors. Image identity is not independently
 verified: compare the catalogue time with the timestamp printed in the image.
@@ -96,3 +96,21 @@ reading of timestamps printed in the pixels.
 Run `npm run build` to prepare a static site in `dist/`. Only index.html, src/
 and prepared vendor files are included. Nothing is published by this command.
 Dependencies are copied locally; the browser does not import them from a CDN.
+
+## Australia views
+
+Use Region and Product above the image. End selects an actual dated catalogue
+observation; frame count selects the observations ending there. Colour may be
+blank at night: choose an earlier end time or infrared. Blank/dark colour frames
+are rejected, not replaced with a different band.
+
+Australia uses JMA's fixed 901 × 701 raster covering 110–155°E, 10–45°S. This
+includes mainland Australia and Tasmania, not all external territories. Exact CRS
+and pixel conventions are unverified; no coordinate overlays or reprojection are
+applied. Export width preserves the raster aspect ratio; height is rounded to an
+even pixel count for video, then adds 56 px for source credit. A 550 px Australia
+export is 550 × 484. Preview pan/zoom does not alter the selected export extent.
+
+TCR outputs always retain JMA, NOAA/NESDIS and CSU/CIRA credit. Source information,
+JSON manifests and the image package's ATTRIBUTION.txt include the composite
+explanation, collaboration acknowledgement and references required by JMA.

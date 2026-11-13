@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { utc, observationStatus } from '../src/core/metadata.mjs';
-import { framesFromJmaOptions, himawariB13 } from '../src/providers/jma.mjs';
+import { framesFromJmaOptions, himawariB13, products } from '../src/providers/jma.mjs';
 import { createSequence } from '../src/core/sequence.mjs';
 
 // Synthetic catalogue records. No live provider or production files are used.
@@ -71,4 +71,10 @@ test('observation status distinguishes stale and future metadata', () => {
 
 test('scan start crosses midnight while catalogue time identifies scan end', () => {
  const frame=discover(options)[1]; assert.equal(frame.scanStartAt,'2025-12-31T23:50:00.000Z');assert.equal(frame.scanEndAt,'2026-01-01T00:00:00.000Z');
+});
+
+test('Australia products retain distinct source IDs and fixed provider geography', () => {
+ const regional=products.filter(p=>p.coverage.regionId==='jma-australia');assert.equal(regional.length,3);
+ for(const product of regional){const frames=framesFromJmaOptions(options,{discoveredAt:'2026-01-01T01:00:00Z',product});assert.equal(frames[0].productId,product.id);assert.match(frames[0].source.url,new RegExp('aus_'+product.band+'_2340'));assert.deepEqual(product.coverage.bounds,[110,-45,155,-10]);}
+ assert.equal(regional.find(p=>p.band==='trm').rights.minimumCredit,'JMA | NOAA/NESDIS | CSU/CIRA');
 });

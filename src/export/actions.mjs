@@ -2,7 +2,7 @@ import { acquireSelection } from './frames.mjs';
 import { exportMedia } from './media.mjs';
 export function attachExports({ store, selection, currentIndex, stop }) {
   const $ = id => document.getElementById(id); let job; const urls = [];
-  function clearResults() { urls.splice(0).forEach(url => URL.revokeObjectURL(url)); $('export-result').hidden = true; $('export-video').removeAttribute('src'); }
+  function clearResults() { urls.splice(0).forEach(url => URL.revokeObjectURL(url)); $('export-result').hidden = true; $('export-video').removeAttribute('src'); $('export-status').textContent = ''; $('export-error').hidden = true; }
   $('export-cancel').onclick = () => job?.abort();
   for (const button of document.querySelectorAll('[data-export]')) button.onclick = async () => {
     if (job) return; const sequence = selection(); if (!sequence) return;
@@ -27,4 +27,5 @@ export function attachExports({ store, selection, currentIndex, stop }) {
       if (error.name !== 'AbortError') { $('export-error').textContent = error.message; $('export-error').hidden = false; }
     } finally { disabled.forEach(([element, previous]) => { element.disabled = previous; }); $('export-cancel').hidden = true; job = undefined; }
   };
+  return clearResults;
 }

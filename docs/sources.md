@@ -32,3 +32,18 @@ fixtures. These checks do not qualify a physical mobile device or another browse
 Installed Safari and Zen passed baseline live WebM exports; the exact checks and remaining gaps are recorded in browser-support.md. Playwright Firefox/WebKit and public static hosting remain unqualified.
 IMD public integration is unavailable pending affirmative permission.
 Other providers are not integrated. No maintainer-hosted proxy is used.
+
+## Australia regional products
+
+B13 infrared, B08 water vapour and True Color Reproduction use JMA's Australia
+viewer and published regional files. Product IDs, discovery, scan times, source
+links, source dimensions and geographic extent are retained independently.
+Region and product changes discard old selections, caches and export links.
+TCR is a processed daylight composite and may be blank at night. Dark-frame
+checking is a content guard, not a solar-geometry or image-quality classifier.
+The provider's 901 × 701 grid is preserved, with no guessed reprojection. Expected
+regional dimensions are checked during acquisition; a mixed-size sequence fails.
+TCR uses the minimum credit explicitly allowed at the bottom of JMA's catalogue
+when the complete explanation/references are impractical in a compact output:
+JMA, NOAA/NESDIS and CSU/CIRA. The fuller material accompanies source details,
+manifests and image packages. This does not extend rights to other providers.
