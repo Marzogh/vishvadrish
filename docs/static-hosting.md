@@ -73,6 +73,9 @@ links, themes, fullscreen, PNG downloads and frame attribution. They do not
 prove a live host's headers, provider availability or physical mobile support.
 Check those on the intended published URL before claiming public qualification.
 
-The current empty favicon is retained. Add the owner's approved icon and
-sharing artwork before finalising publication metadata; no placeholder image
-or new visual identity is supplied.
+Favicons, the Apple touch icon and the header mark use the supplied project
+artwork. Open Graph and Twitter image metadata point to the supplied 1200 × 630
+preview at `https://chipsncode.com/vishvadrish/assets/brand/`.
+When publishing at another origin or subdirectory, update those absolute preview
+URLs in `index.html`. Icons, fonts, modules and styles use relative paths.
+The README banner is documentation artwork and is not displayed in the viewer.

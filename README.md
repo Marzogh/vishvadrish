@@ -2,6 +2,8 @@
 
 दूराद् धरायाः स्पन्दनम्
 
+![Viśvadṛś: open-source Earth observation](assets/brand/vishvadrish-readme-header.png)
+
 Satellite imagery exploration, downloads and browser-based time-lapse creation.
 
 The viewer supports JMA Himawari-9 full-disc and Australia regional B13 infrared, B08 water vapour and True Color Reproduction. It discovers
@@ -150,4 +152,4 @@ Add `&embed=1` for a compact article embed. The embedded viewer retains its name
 theme selection, source attribution and normal controls, with an Open viewer link
 that opens the same region/product in a standalone tab. See
 [static hosting and embedding](docs/static-hosting.md) for publication paths,
-iframe permissions and build instructions. Product icons and sharing artwork remain to be supplied.
+iframe permissions and build instructions. The supplied project icon, favicons, Apple touch icon and social-preview artwork are bundled under `assets/`.
