@@ -34,7 +34,7 @@ test('JMA fails explicitly on empty, changed, duplicate and corrupt options', ()
 test('rights and capabilities keep permission separate from implementation', () => {
   assert.equal(himawariB13.rights.download, 'permitted-with-conditions');
   assert.equal(himawariB13.rights.editNoticeRequired, true);
-  assert.equal(himawariB13.capabilities.videoExport, 'not-implemented');
+  assert.equal(himawariB13.capabilities.videoExport, 'webm-capability-detected');
   assert.equal(himawariB13.coverage.georeferencing, 'unverified');
 });
 test('sequence preserves source gaps even when sampling fewer frames', () => {
@@ -67,4 +67,8 @@ test('observation status distinguishes stale and future metadata', () => {
   assert.equal(observationStatus('2026-01-01T00:00:00Z', settings).state, 'stale');
   assert.equal(observationStatus('2026-01-01T00:50:00Z', settings).state, 'recent');
   assert.equal(observationStatus('2026-01-01T02:00:00Z', settings).state, 'future');
+});
+
+test('scan start crosses midnight while catalogue time identifies scan end', () => {
+ const frame=discover(options)[1]; assert.equal(frame.scanStartAt,'2025-12-31T23:50:00.000Z');assert.equal(frame.scanEndAt,'2026-01-01T00:00:00.000Z');
 });

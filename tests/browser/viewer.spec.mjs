@@ -7,7 +7,7 @@ async function fixtures(page, { catalogueStatus = 200, imageStatus = 200, corrup
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 550;
     const ctx = canvas.getContext('2d'); ctx.fillStyle = '#101010'; ctx.fillRect(0, 0, 550, 550);
     ctx.fillStyle = '#cccccc'; ctx.beginPath(); ctx.arc(275, 275, 220, 0, Math.PI * 2); ctx.fill();
-    return canvas.toDataURL('image/jpeg').split(',')[1];
+    return Array.from({ length: 3 }, (_, i) => { for(let b=0;b<4;b++){ctx.fillStyle=i & (1<<b)?'white':'black';ctx.fillRect(30+b*100,250,50,50);} return canvas.toDataURL('image/jpeg').split(',')[1]; });
   });
   const standard = [
     ['0020', '00:30 UTC 1 January 2026'], ['0000', '00:10 UTC 1 January 2026'], ['2350', '00:00 UTC 1 January 2026'],
@@ -19,7 +19,7 @@ async function fixtures(page, { catalogueStatus = 200, imageStatus = 200, corrup
     if (delay && !catalogue) await new Promise(resolve => setTimeout(resolve, 1200));
     await route.fulfill({ status: catalogue ? catalogueStatus : imageStatus,
       headers: { 'access-control-allow-origin': '*' },
-      contentType: catalogue ? 'text/html' : 'image/jpeg', body: catalogue ? html : corrupt ? Buffer.from('broken jpeg') : Buffer.from(data, 'base64') });
+      contentType: catalogue ? 'text/html' : 'image/jpeg', body: catalogue ? html : corrupt ? Buffer.from('broken jpeg') : Buffer.from(data[route.request().url().includes('_2350.') ? 0 : route.request().url().includes('_0000.') ? 1 : 2], 'base64') });
   });
 }
 test('browse, scrub, step, play and pause actual catalogue entries', async ({ page }) => {
@@ -50,12 +50,12 @@ test('keyboard zoom, pan and fit; source attribution remains visible', async ({ 
   await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1.5, 0, 0, 1.5, 30, 0)');
   await page.keyboard.press('0'); await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
   await expect(page.locator('.credit a')).toHaveAttribute('href', host + 'sat_img.php?area=fd_');
-  await page.locator('summary').click();
-  await expect(page.getByText('Time comes from JMA’s catalogue.', { exact: false })).toBeVisible();
+  await page.locator('.source summary').click();
+  await expect(page.getByText('Time comes from JMA’s catalogue', { exact: false })).toBeVisible();
 });
 test('catalogue failure gives a recoverable error without invented observations', async ({ page }) => {
   await fixtures(page, { catalogueStatus: 503 }); await page.goto('/');
-  await expect(page.getByRole('alert')).toContainText('HTTP 503');
+  await expect(page.locator('#error')).toContainText('HTTP 503');
   await expect(page.locator('#image')).toBeHidden(); await expect(page.locator('#play')).toBeDisabled();
   await page.unrouteAll(); await fixtures(page); await page.getByRole('button', { name: 'Retry', exact: true }).click();
   await expect(page.locator('#image')).toBeVisible();
@@ -63,7 +63,7 @@ test('catalogue failure gives a recoverable error without invented observations'
 for (const scenario of [{ imageStatus: 404 }, { corrupt: true }]) {
   test(`image failure clears timestamp and stops playback: ${JSON.stringify(scenario)}`, async ({ page }) => {
     await fixtures(page, scenario); await page.goto('/');
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.locator('#error')).toBeVisible();
     await expect(page.locator('#image')).toBeHidden();
     await expect(page.locator('#observation')).toHaveText('Not loaded');
     await expect(page.locator('#retry')).toBeVisible();
@@ -121,6 +121,9 @@ test('live JMA discovery, cross-origin pixels and navigation', async ({ page }, 
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('live-mobile.png'), fullPage: true });
+  await page.getByRole('button',{name:'Latest 6 observations',exact:true}).click();await expect(page.locator('#image')).toBeVisible();await saveAction(page,'video');
+  await expect(page.locator('#export-video')).toHaveJSProperty('duration',3);
+  const saving=page.waitForEvent('download');await page.locator('#export-file').click();await (await saving).saveAs(testInfo.outputPath('live-six-frames.webm'));
 });
 
 test('compact inline choices change frame count and speed; icon buttons remain usable', async ({ page }) => {
@@ -137,9 +140,53 @@ test('compact inline choices change frame count and speed; icon buttons remain u
   await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1.5, 0, 0, 1.5, 0, 0)');
   await page.getByRole('button', { name: 'Fit', exact: true }).click();
   await expect(page.locator('#image')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
-  await expect(page.locator('select')).toHaveCount(0);
+  await expect(page.locator('.sourcebar select')).toHaveCount(0);
   for (const name of ['Play observations', 'Previous observation', 'Next observation', 'Refresh observations']) {
     const box = await page.getByRole('button', { name, exact: true }).boundingBox();
     expect(box.width).toBeGreaterThanOrEqual(24); expect(box.height).toBe(32);
   }
+});
+
+async function saveAction(page, kind) {
+  await page.locator('.save summary').click();
+  await page.locator(`[data-export="${kind}"]`).click();
+  await expect(page.locator('#export-file')).toBeVisible({ timeout: 25000 });
+}
+test('PNG and ZIP downloads preserve credit, scan times and frame provenance', async ({ page }, info) => {
+  const { unzipSync } = await import('fflate'); const { readFile } = await import('node:fs/promises');
+  await fixtures(page); await page.goto('/'); await expect(page.locator('#image')).toBeVisible();
+  await saveAction(page, 'frame');
+  let waiting = page.waitForEvent('download'); await page.locator('#export-file').click(); let download = await waiting;
+  await download.saveAs(info.outputPath('frame.png')); const png = await readFile(info.outputPath('frame.png')); expect(png.subarray(1,4).toString()).toBe('PNG');
+  await page.locator('[data-export="zip"]').click(); await expect(page.locator('#export-file')).toHaveText('Download ZIP');
+  waiting = page.waitForEvent('download'); await page.locator('#export-file').click(); download = await waiting;
+  await download.saveAs(info.outputPath('frames.zip')); const files=unzipSync(await readFile(info.outputPath('frames.zip')));
+  expect(Object.keys(files).filter(name=>name.endsWith('.png'))).toHaveLength(3);
+  const manifest=JSON.parse(new TextDecoder().decode(files['manifest.json']));
+  expect(manifest.frames[0].scanStartAt).toBe('2025-12-31T23:50:00.000Z');
+  expect(manifest.frames[0].scanEndAt).toBe('2026-01-01T00:00:00.000Z');
+  expect(manifest.frames.every(frame=>/^[a-f0-9]{64}$/.test(frame.sha256))).toBe(true);
+  expect(manifest.product.rights.attribution).toContain('JMA');
+});
+test('saved WebM has exact timing, dimensions and ordered native-player markers', async ({ page }, info) => {
+  await fixtures(page); await page.goto('/'); await expect(page.locator('#image')).toBeVisible(); await saveAction(page,'video');
+  const waiting=page.waitForEvent('download');await page.locator('#export-file').click();const download=await waiting;
+  const path=info.outputPath('saved.webm');await download.saveAs(path);
+  await page.evaluate(()=>{const input=document.createElement('input');input.type='file';input.id='saved-input';document.body.append(input);});
+  await page.locator('#saved-input').setInputFiles(path);
+  const result=await page.evaluate(async()=>{
+    const video=document.createElement('video');video.src=URL.createObjectURL(document.querySelector('#saved-input').files[0]);
+    await new Promise(resolve=>video.onloadedmetadata=resolve);const canvas=document.createElement('canvas');canvas.width=550;canvas.height=606;const ctx=canvas.getContext('2d');const markers=[];
+    for(let i=0;i<3;i++){video.currentTime=(i+.5)/2;await new Promise(resolve=>video.onseeked=resolve);await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));ctx.drawImage(video,0,0);let marker=0;for(let b=0;b<4;b++)if(ctx.getImageData(50+b*100,275,1,1).data[0]>128)marker|=1<<b;markers.push(marker);}
+    return {duration:video.duration,width:video.videoWidth,height:video.videoHeight,markers};
+  });
+  expect(result).toEqual({duration:1.5,width:550,height:606,markers:[0,1,2]});
+  await page.screenshot({path:info.outputPath('export-controls.png'),fullPage:true});
+});
+test('export cancellation and acquisition failure leave no downloadable partial output',async({page})=>{
+  await fixtures(page,{delay:true});await page.goto('/');await expect(page.locator('#image')).toBeVisible();
+  await page.locator('.save summary').click();await page.locator('[data-export="zip"]').click();await expect(page.locator('#export-cancel')).toBeVisible();await page.locator('#export-cancel').click();
+  await expect(page.locator('#export-status')).toHaveText('Export cancelled.');await expect(page.locator('#export-result')).toBeHidden();
+  await page.route('**/fd__b13_2350.jpg',route=>route.fulfill({status:404}));await page.locator('[data-export="zip"]').click();
+  await expect(page.locator('#export-error')).toContainText('HTTP 404');await expect(page.locator('#export-result')).toBeHidden();
 });

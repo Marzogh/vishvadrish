@@ -8,7 +8,7 @@ The first viewer supports JMA Himawari-9 full-disc B13 infrared imagery. It disc
 dated observations directly from JMA and provides a timeline, playback, zoom, pan,
 source credit and recoverable loading errors. Image identity is not independently
 verified: compare the catalogue time with the timestamp printed in the image.
-Downloads, video export, other products and the optional HTTP service are unfinished.
+The Save menu exports a PNG frame, a ZIP image sequence with a provenance manifest, or a browser-encoded WebM video. Other products and the optional HTTP service remain unfinished.
 
 ## Open the viewer
 
@@ -25,7 +25,7 @@ the selected playback rate is a target rather than precise video timing.
 
 Use the timeline arrow keys to select observations. Focus the image view and
 press plus/minus to zoom, arrow keys to pan, or zero to fit. Pointer dragging also
-pans. The viewer retains at most 12 image blobs and offers the latest 6, 12 or 24
+pans. The viewer retains at most 12 image URLs and 24 acquired image blobs (up to 50 MB) and offers the latest 6, 12 or 24
 catalogued observations. Refresh is required after five minutes before further
 image requests. This guard does not independently verify a rolling URL's contents.
 
@@ -37,7 +37,7 @@ Install Node.js 20 or newer, then run from the repository root:
 npm test
 ```
 
-No dependency installation is required. The test runner prints each test result
+No dependency installation is required for unit tests. Run `npm ci` before starting the viewer or building it. The test runner prints each test result
 and a final pass/fail count. Tests use synthetic metadata and do not fetch imagery
 or write production files.
 
@@ -73,3 +73,27 @@ See [architecture](docs/architecture.md) and [source support](docs/sources.md).
 
 Application code is MIT-licensed. Provider imagery has separate terms and
 attribution requirements. No satellite imagery is included in this repository.
+
+## Exports and static build
+
+Open Save to choose a frame, image sequence or WebM video. Video uses the selected
+playback rate and all selected frames. Choose 550 or 1100 px imagery width,
+Standard or High quality, and skip gaps or hold the previous image. The output
+adds a 56 px source-credit strip. Timestamp text can be hidden; source credit is
+always retained. PNG and ZIP use the selected size; quality applies to video.
+Download links appear after processing, together with a JSON provenance manifest.
+The video can be previewed before downloading. Cancel export stops the job without
+offering partial output. Jobs are limited to 24 observations, 144 held output
+frames and 50 MB result size. ZIP packaging and video finalisation use memory;
+this is not an unlimited streaming exporter.
+
+WebM tries VP9, then VP8, using browser capability checks. MP4 is not offered.
+If neither encoder is supported, use the image sequence. Chromium is tested;
+other browsers and physical mobile devices remain unqualified. Catalogue and
+filename times describe scan end and scan start respectively, ten minutes apart.
+Exports retain acquired bytes and catalogue associations, not an independent
+reading of timestamps printed in the pixels.
+
+Run `npm run build` to prepare a static site in `dist/`. Only index.html, src/
+and prepared vendor files are included. Nothing is published by this command.
+Dependencies are copied locally; the browser does not import them from a CDN.

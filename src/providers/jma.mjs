@@ -21,13 +21,13 @@ export const himawariB13 = snapshot({
   capabilities: {
     discovery: 'implemented', browserImageAccess: 'previously-demonstrated',
     imageIdentityValidation: 'not-implemented', regionalRendering: 'not-implemented',
-    frameDownload: 'not-implemented', sequenceExport: 'not-implemented', videoExport: 'not-implemented',
+    frameDownload: 'implemented', sequenceExport: 'implemented', videoExport: 'webm-capability-detected',
   },
 });
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** Convert actual provider options. Slot is an opaque rolling locator, not time. */
+/** Catalogue label is scan end; rolling filename slot is scan start. */
 export function framesFromJmaOptions(options, { discoveredAt }) {
   discoveredAt = utc(discoveredAt);
   if (!Array.isArray(options) || !options.length) throw new Error('JMA returned no dated observations');
@@ -44,6 +44,7 @@ export function framesFromJmaOptions(options, { discoveredAt }) {
     return {
       id: `${himawariB13.id}/${observedAt}`, productId: himawariB13.id,
       observedAt, discoveredAt,
+      scanStartAt: new Date(Date.parse(observedAt) - 600000).toISOString(), scanEndAt: observedAt,
       timeAuthority: 'provider-catalogue-label', validation: 'catalogue-only',
       source: { catalogueUrl: JMA_CATALOGUE, label: label.trim(), slot,
         url: new URL(`img/fd_/fd__b13_${slot}.jpg`, JMA_CATALOGUE).href,

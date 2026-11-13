@@ -5,11 +5,20 @@
   "type": "module",
   "description": "Satellite imagery discovery and browser-based time-lapse creation",
   "license": "MIT",
-  "engines": { "node": ">=20" },
-  "scripts": {
-    "dev": "node scripts/serve.mjs",
-    "test": "node --test --test-reporter=spec tests/*.test.mjs",
-    "test:browser": "playwright test --config tests/playwright.config.mjs"
+  "engines": {
+    "node": ">=20"
   },
-  "devDependencies": { "@playwright/test": "1.58.2" }
+  "scripts": {
+    "dev": "node scripts/assets.mjs && node scripts/serve.mjs",
+    "test": "node --test --test-reporter=spec tests/*.test.mjs",
+    "test:browser": "playwright test --config tests/playwright.config.mjs",
+    "build": "node scripts/assets.mjs --build"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2"
+  },
+  "dependencies": {
+    "fflate": "0.8.2",
+    "mediabunny": "1.65.2"
+  }
 }

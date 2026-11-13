@@ -1,3 +1,5 @@
+import { FrameStore } from '../export/frames.mjs';
+import { attachExports } from '../export/actions.mjs';
 import { discoverJma, himawariB13 } from '../providers/jma.mjs';
 import { observationStatus } from '../core/metadata.mjs';
 import { createSequence } from '../core/sequence.mjs';
@@ -5,6 +7,7 @@ import { createSequence } from '../core/sequence.mjs';
 const $ = id => document.getElementById(id);
 const controls = ['previous', 'play', 'next', 'timeline', 'zoom-in', 'zoom-out', 'fit'];
 const cache = new Map();
+const store = new FrameStore();
 let catalogue = [], sequence, index = 0, playing = false, timer, request, revision = 0;
 let frameCount = 12, frameDelay = 500;
 let zoom = 1, panX = 0, panY = 0, drag;
@@ -21,6 +24,7 @@ function stop() {
 function transform() { $('image').style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`; }
 function fit() { zoom = 1; panX = panY = 0; transform(); }
 function clearImage() {
+  document.querySelectorAll('[data-export]').forEach(button => { button.disabled = true; });
   $('image').hidden = true; $('image').removeAttribute('src'); $('placeholder').hidden = false;
   $('observation').textContent = 'Not loaded'; $('observation').removeAttribute('datetime');
   $('age').textContent = ''; $('dimensions').textContent = '';
@@ -54,10 +58,8 @@ async function show(next) {
     if (Date.now() - Date.parse(frame.discoveredAt) > 300000) throw new Error('Observation list has expired. Refresh before loading more images.');
     let url = cache.get(frame.id);
     if (!url) {
-      const response = await fetch(frame.source.url, { signal, credentials: 'omit', cache: 'no-store', mode: 'cors' });
-      if (!response.ok) throw new Error(`JMA image request failed: HTTP ${response.status}.`);
-      const blob = await response.blob();
-      if (blob.type !== 'image/jpeg' || blob.size === 0 || blob.size > 5000000) throw new Error('JMA returned an unexpected image response.');
+      const entry = await store.get(frame, signal);
+      const blob = entry.blob;
       if (token !== revision) return false;
       url = URL.createObjectURL(blob); remember(frame.id, url);
     } else { cache.delete(frame.id); cache.set(frame.id, url); }
@@ -71,6 +73,7 @@ async function show(next) {
     $('age').textContent = age.state === 'future' ? 'Catalogue time is in the future' : `${age.state === 'stale' ? 'Older observation · ' : ''}${minutes} min ago`;
     $('dimensions').textContent = `${decoded.naturalWidth} × ${decoded.naturalHeight} px`;
     for (const id of ['zoom-in', 'zoom-out', 'fit']) $(id).disabled = false;
+    document.querySelectorAll('[data-export]').forEach(button => { button.disabled = false; });
     setStatus(playing ? 'Playing observations. Gaps are skipped.' : 'Image loaded.');
     return true;
   } catch (error) {
@@ -98,6 +101,7 @@ async function selectWindow() {
 }
 async function refresh() {
   stop(); sequence = undefined; catalogue = [];
+  store.clear();
   for (const url of cache.values()) URL.revokeObjectURL(url); cache.clear();
   const { signal, token } = begin(); clearImage(); fit();
   controls.forEach(id => { $(id).disabled = true; }); windowButtons.forEach(button => { button.disabled = true; });
@@ -147,4 +151,5 @@ $('viewport').onpointerdown = event => { if (event.target.closest('button') || $
 $('viewport').onpointermove = event => { if (!drag) return; panX = event.clientX - drag.x; panY = event.clientY - drag.y; transform(); };
 $('viewport').onpointerup = $('viewport').onpointercancel = () => { drag = undefined; };
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+attachExports({ store, selection: () => sequence, currentIndex: () => index, stop: () => { stop(); request?.abort(); revision++; $('cancel').hidden = true; } });
 refresh();

@@ -18,11 +18,10 @@ imply that JMA created them. The application's MIT licence does not license imag
 | Direct provider access | Fresh HTTP catalogue and JPEG requests succeeded with permissive CORS headers |
 | Browser image/canvas access | Current viewer passed live desktop Chromium loading, navigation and pixel readback |
 | Pixel observation identity and dimensions | Not validated by this implementation |
-| Downloads, video and API | Not implemented |
+| Downloads and video | PNG, ZIP with manifest, browser WebM; API remains unimplemented |
 | Australia regional products, colour, water vapour | Require separate access, attribution and geometry checks |
 
-The fresh catalogue contained 139 dated options. Its observation label was ten
-minutes later than the sampled rolling filename slot. Code retains the label and
+The sampled catalogue observation label is scan end. Its rolling filename slot is scan start, ten minutes earlier. Both are recorded with dates, including midnight rollover. Code retains the label and
 slot separately; it does not infer observation time from filenames. These URLs
 are rolling locators, not archives. HTTP success and CORS headers do not establish
 that pixels match a requested observation or qualify a complete browser workflow.
