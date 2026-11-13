@@ -1,10 +1,15 @@
+import { SessionImageCache } from './session-cache.mjs';
 import { discoverJma, getProduct } from '../providers/jma.mjs';
 export class FrameStore {
   entries = new Map();
+  sessionCache = new SessionImageCache();
   clear() { this.entries.clear(); }
   async get(frame, signal) {
     signal?.throwIfAborted();
     if (this.entries.has(frame.id)) return this.entries.get(frame.id);
+    const saved = await this.sessionCache.get(frame);
+    signal?.throwIfAborted();
+    if (saved) { this.remember(saved); return saved; }
     if (Date.now() - Date.parse(frame.discoveredAt) > 300000) throw Error('Observation list expired. Refresh before fetching images.');
     const response = await fetch(frame.source.url, { signal, mode: 'cors', credentials: 'omit', cache: 'no-store' });
     if (!response.ok) throw Error(`JMA image request failed: HTTP ${response.status}.`);
@@ -26,9 +31,14 @@ export class FrameStore {
     const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(v => v.toString(16).padStart(2, '0')).join('');
     const entry = Object.freeze({ blob, frame, width, height, sha256: hash, acquiredAt: new Date().toISOString() });
     signal?.throwIfAborted();
-    this.entries.set(frame.id, entry);
-    while (this.entries.size > 24 || [...this.entries.values()].reduce((sum, item) => sum + item.blob.size, 0) > 50000000) this.entries.delete(this.entries.keys().next().value);
+    await this.sessionCache.put(entry);
+    signal?.throwIfAborted();
+    this.remember(entry);
     return entry;
+  }
+  remember(entry) {
+    this.entries.delete(entry.frame.id); this.entries.set(entry.frame.id, entry);
+    while (this.entries.size > 24 || [...this.entries.values()].reduce((sum, item) => sum + item.blob.size, 0) > 50000000) this.entries.delete(this.entries.keys().next().value);
   }
 }
 export async function acquireSelection(sequence, store, signal, progress) {

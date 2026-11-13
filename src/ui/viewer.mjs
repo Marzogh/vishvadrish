@@ -245,3 +245,19 @@ document.addEventListener('fullscreenchange', () => {
   $('fullscreen').setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
   $('fullscreen').setAttribute('aria-pressed', String(active));
 });
+
+let fullscreenIdleTimer;
+function revealFullscreenControls() {
+  clearTimeout(fullscreenIdleTimer);
+  $('viewer').classList.remove('controls-idle');
+  if (document.fullscreenElement === $('viewer')) fullscreenIdleTimer = setTimeout(() => $('viewer').classList.add('controls-idle'), 2000);
+}
+$('viewer').addEventListener('pointermove', revealFullscreenControls);
+$('viewer').addEventListener('pointerdown', revealFullscreenControls);
+$('viewer').addEventListener('keydown', revealFullscreenControls);
+$('viewer').addEventListener('focusin', revealFullscreenControls);
+document.addEventListener('fullscreenchange', revealFullscreenControls);
+
+window.addEventListener('image-cache-warning', event => {
+  $('cache-status').textContent = event.detail; $('cache-status').hidden = false;
+});

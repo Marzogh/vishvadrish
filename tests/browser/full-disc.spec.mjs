@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { fixtures } from './fixtures.mjs';
 for(const band of ['b08','trm']) test(`full-disc ${band} uses separate pixels and exports`,async({page},info)=>{
- await fixtures(page);await page.goto('/');await expect(page.locator('#product option')).toHaveCount(3);
- const requests=[];page.on('request',request=>requests.push(request.url()));
+ await fixtures(page);const requests=[];page.on('request',request=>requests.push(request.url()));
+ await page.goto('/');await expect(page.locator('#product option')).toHaveCount(3);
  await page.locator('#product').selectOption('jma.himawari9.full-disc.'+band);await expect(page.locator('#image')).toBeVisible();expect(requests.some(url=>url.includes('fd__'+band+'_'))).toBe(true);
  await expect(page.locator('#region')).toHaveCSS('color','rgb(236, 239, 234)');await expect(page.locator('#region')).toHaveCSS('background-color','rgb(21, 24, 25)');await expect(page.locator('#product')).toHaveCSS('color','rgb(236, 239, 234)');
  await page.locator('#fps').selectOption('2');await page.locator('.save summary').click();await page.locator('[data-export="video"]').click();await expect(page.locator('#export-status')).toHaveText('Ready to download.');await expect(page.locator('#export-video')).toHaveJSProperty('duration',1.5);

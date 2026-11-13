@@ -119,3 +119,15 @@ Hours is an editable preset field, defaulting to All available. It selects actua
 Play buffers the complete selected sequence before starting, with progress and cancellation. Decoded display frames are capped at 700 px width and 256 MB estimated RGBA storage, alongside the 50 MB acquired-image limit. Exports retain original acquired pixels. Playback performs no image network requests and keeps the previous frame visible while preparing. Changing the selection releases the display buffer.
 
 The viewer starts with True Color Reproduction and 4 fps. The fps dropdown offers 1, 2, 4, 6, 8 and 10 for both playback and video export. Fullscreen expands the viewer and keeps the timeline and playback controls floating over the image. Use Exit fullscreen or Escape to leave it.
+
+In fullscreen, translucent controls fade after two seconds without activity. Pointer movement, touch or keyboard interaction reveals them again.
+
+Validated images are cached locally across refreshes in the same tab session,
+keyed by dated observation, region and product, not rolling filename alone.
+The catalogue is still fetched to discover new observations; only missing images
+are downloaded. Closing the tab ends its cache identity. A newly opened tab does
+not reuse that session. Browser storage cannot reliably be erased at the exact
+moment a tab closes: old bytes are capped at 50 MB across sessions and expire
+after 24 hours, with cleanup on subsequent cache writes. This is not an archive.
+If browser storage is unavailable, a visible notice explains the memory-only
+fallback. Failed or invalid image responses are not saved.
