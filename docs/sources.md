@@ -29,6 +29,6 @@ that pixels match a requested observation or qualify a complete browser workflow
 Responsive layout, keyboard controls, forced colours, reduced motion, palette
 contrast and colour-vision simulations are checked in Chromium using synthetic
 fixtures. These checks do not qualify a physical mobile device or another browser.
-No Safari, Firefox, public static-host or video-export qualification is claimed.
+Installed Safari and Zen passed baseline live WebM exports; the exact checks and remaining gaps are recorded in browser-support.md. Playwright Firefox/WebKit and public static hosting remain unqualified.
 IMD public integration is unavailable pending affirmative permission.
 Other providers are not integrated. No maintainer-hosted proxy is used.

@@ -88,8 +88,7 @@ frames and 50 MB result size. ZIP packaging and video finalisation use memory;
 this is not an unlimited streaming exporter.
 
 WebM tries VP9, then VP8, using browser capability checks. MP4 is not offered.
-If neither encoder is supported, use the image sequence. Chromium is tested;
-other browsers and physical mobile devices remain unqualified. Catalogue and
+If neither encoder is supported, use the image sequence. Chromium has automated export coverage; installed Safari and Zen passed baseline live exports. Physical mobile devices remain untested. See [browser support](docs/browser-support.md) for the exact matrix. Catalogue and
 filename times describe scan end and scan start respectively, ten minutes apart.
 Exports retain acquired bytes and catalogue associations, not an independent
 reading of timestamps printed in the pixels.
