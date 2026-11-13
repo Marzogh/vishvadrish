@@ -1,0 +1,10 @@
+{
+  "name": "vishvadrish",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Satellite imagery discovery and browser-based time-lapse creation",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test --test-reporter=spec tests/*.test.mjs" }
+}
