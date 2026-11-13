@@ -1,3 +1,5 @@
+import { extensionRequest } from '../import/extension.mjs';
+import { loadHistory } from '../import/nict.mjs';
 import { preparePlayback } from './playback.mjs';
 import { FrameStore } from '../export/frames.mjs';
 import { attachExports } from '../export/actions.mjs';
@@ -81,7 +83,7 @@ async function show(next) {
   setStatus(`Loading observation ${index + 1} of ${sequence.frames.length}…`);
   try {
     // Do not reuse a stale catalogue to request a mutable rolling URL.
-    if (Date.now() - Date.parse(frame.discoveredAt) > 300000) throw new Error('Observation list has expired. Refresh before loading more images.');
+    if (!sequence.local && Date.now() - Date.parse(frame.discoveredAt) > 300000) throw new Error('Observation list has expired. Refresh before loading more images.');
     let url = cache.get(frame.id);
     if (!url) {
       const entry = await store.get(frame, signal);
@@ -96,7 +98,7 @@ async function show(next) {
     $('observation').textContent = format(frame.observedAt); $('observation').dateTime = frame.observedAt;
     const age = observationStatus(frame.observedAt, { now: new Date().toISOString(), staleAfterMs: 1800000 });
     const minutes = Math.max(0, Math.floor(age.ageMs / 60000));
-    $('age').textContent = age.state === 'future' ? 'Catalogue time is in the future' : `${age.state === 'stale' ? 'Older observation · ' : ''}${minutes} min ago`;
+    $('age').textContent = sequence.local ? 'Historical' : age.state === 'future' ? 'Catalogue time is in the future' : `${age.state === 'stale' ? 'Older observation · ' : ''}${minutes} min ago`;
     $('dimensions').textContent = `${decoded.naturalWidth} × ${decoded.naturalHeight} px`;
     for (const id of ['zoom-in', 'zoom-out', 'fit']) $(id).disabled = false;
     document.querySelectorAll('[data-export]').forEach(button => { button.disabled = false; });
@@ -131,12 +133,15 @@ async function selectWindow() {
 
   sequence = createSequence({ product, frames: selected, start,
     end: selected.at(-1).observedAt, maxFrames: 144, grid: { kind: 'source-raster', width: product.coverage.sourceWidth || 550, height: product.coverage.sourceHeight || 550, fit: 'contain' }, gapPolicy: 'skip' });
+  await displaySequence();
+}
+async function displaySequence() {
   $('timeline').max = sequence.frames.length - 1;
   $('frame-marks').replaceChildren(...sequence.frames.map(() => document.createElement('span')));
   $('frame-ticks').replaceChildren(...sequence.frames.map((frame, i) => { const option = document.createElement('option'); option.value = i; option.label = format(frame.observedAt); return option; }));
   $('start-time').textContent = format(sequence.frames[0].observedAt);
   $('end-time').textContent = format(sequence.frames.at(-1).observedAt);
-  $('gaps').textContent = sequence.gaps.length ? `${sequence.gaps.length} gap${sequence.gaps.length === 1 ? '' : 's'} · skipped in playback` : '';
+  $('gaps').textContent = sequence.local && sequence.missing?.length ? `${sequence.missing.length} missing observations · skipped` : sequence.gaps.length ? `${sequence.gaps.length} gap${sequence.gaps.length === 1 ? '' : 's'} · skipped in playback` : '';
   controls.forEach(id => { $(id).disabled = false; });
   await show(sequence.frames.length - 1);
 }
@@ -174,7 +179,7 @@ function tick() {
   $('timeline').value = index; $('timeline').setAttribute('aria-valuetext', format(frame.observedAt));
   $('position').textContent = `${index + 1} / ${sequence.frames.length}`;
   const age = observationStatus(frame.observedAt, { now: new Date().toISOString(), staleAfterMs: 1800000 });
-  $('age').textContent = age.state === 'future' ? 'Catalogue time is in the future' : `${age.state === 'stale' ? 'Older observation · ' : ''}${Math.max(0, Math.floor(age.ageMs / 60000))} min ago`;
+  $('age').textContent = sequence.local ? 'Historical' : age.state === 'future' ? 'Catalogue time is in the future' : `${age.state === 'stale' ? 'Older observation · ' : ''}${Math.max(0, Math.floor(age.ageMs / 60000))} min ago`;
   $('dimensions').textContent = `${entry.width} × ${entry.height} px`;
   timer = setTimeout(tick, frameDelay);
 }
@@ -283,3 +288,66 @@ document.addEventListener('fullscreenchange', revealFullscreenControls);
 window.addEventListener('image-cache-warning', event => {
   $('cache-status').textContent = event.detail; $('cache-status').hidden = false;
 });
+
+const liveText = Object.fromEntries(['time-description','source-description','access-description'].map(id=>[id,$(id).textContent]));
+let historyJob;
+$('history-date').value = new Date(Date.now()-86400000).toISOString().slice(0,10);
+$('history-open').onclick = async () => {
+  const open = $('history-controls').hidden;
+  $('history-controls').hidden = !open; $('history-open').setAttribute('aria-expanded',String(open));
+  if (!open) return;
+  try { await extensionRequest('ping');$('history-load').disabled=false;$('history-status').textContent=''; }
+  catch { $('history-load').disabled=true;$('history-status').textContent='Enable the history extension, then reload this page.';$('extension-help').showModal(); }
+
+};
+$('history-cancel').onclick = () => historyJob?.abort();
+$('history-controls').onsubmit = async event => {
+  event.preventDefault();if(historyJob)return;
+  stop(); request?.abort(); revision++;
+  const controller = new AbortController(); historyJob=controller;
+  const locked=['history-open','history-load','history-date','history-start','history-end','region','product','refresh','hours','hours-toggle','end-at','live','previous','next','play','timeline'];
+  const states=locked.map(id=>[$(id),$(id).disabled]); states.forEach(([el])=>el.disabled=true);
+  $('history-cancel').hidden=false;let installed=false;
+  document.querySelectorAll('[data-export]').forEach(b=>b.disabled=true);
+  try {
+    const date=$('history-date').value;
+    const loaded=await loadHistory(date+'T'+$('history-start').value+':00Z',date+'T'+$('history-end').value+':00Z',controller.signal,text=>$('history-status').textContent=text);
+    stop(); request?.abort(); revision++; playback?.close(); playback = undefined; exportActions();
+    store.clear(); for (const url of cache.values()) URL.revokeObjectURL(url); cache.clear();
+    store.local = new Map(loaded.entries.map(entry=>[entry.frame.id,entry]));
+    sequence = loaded.sequence; product = sequence.product;
+    document.querySelector('.satellite').textContent = 'NICT archive';
+    for (const id of ['region','product','refresh','hours','hours-toggle','end-at']) $(id).disabled = true;
+    hoursMenu(false);
+    $('product').replaceChildren(new Option('NICT colour · 550 px', product.id));
+    $('region').value = 'full-disc'; $('live').hidden = false;
+    $('image').alt = 'Historical NICT full-disc colour imagery';
+    const credit = document.querySelector('.credit a'); credit.textContent = product.rights.minimumCredit; credit.href = product.sourceUrl;
+    $('time-description').textContent = sequence.timeMeaning;
+    $('source-description').textContent = product.rights.acknowledgement;
+    $('access-description').textContent = 'Retrieved through the local NICT connector. Nothing is uploaded.';
+    $('product-description').textContent = 'D531106 colour · 550 × 550 px';
+    $('region-description').textContent = ''; $('tcr-acknowledgement').hidden = true;
+    $('duration-limit').textContent = sequence.frames.length + ' historical frames';
+    fit(); await displaySequence();
+
+    installed=true;
+    $('history-status').textContent = `${loaded.entries.length} frames ready · ${loaded.sequence.missing.length} missing`;
+  } catch(error) { $('history-status').textContent=error.name==='AbortError'?'Loading cancelled.':error.message; }
+  finally {
+    historyJob=undefined;$('history-cancel').hidden=true;states.forEach(([el,disabled])=>el.disabled=disabled);
+    if(installed) {for(const id of ['region','product','refresh','hours','hours-toggle','end-at'])$(id).disabled=true;controls.forEach(id=>$(id).disabled=false);$('live').disabled=false;}
+    document.querySelectorAll('[data-export]').forEach(b=>b.disabled=!sequence);
+  }
+};
+$('live').onclick = () => {
+  historyJob?.abort();$('history-controls').hidden=true;$('history-open').setAttribute('aria-expanded','false');
+  for (const [id,text] of Object.entries(liveText)) $(id).textContent = text;
+  document.querySelector('.satellite').textContent = 'Himawari-9';
+  document.querySelector('.credit a').textContent = 'MSC/JMA';
+  for (const id of ['region','product','refresh']) $(id).disabled = false;
+  $('live').hidden = true; product = getProduct('jma.himawari9.full-disc.trm'); $('region').onchange();
+};
+
+$('extension-help-close').onclick=()=>$('extension-help').close();
+$('extension-help-open').onclick=()=>$('extension-help').showModal();

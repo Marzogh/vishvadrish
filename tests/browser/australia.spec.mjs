@@ -15,10 +15,23 @@ test('Australia selection isolates products and preserves regional PNG, ZIP and 
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('australia-mobile.png'),fullPage:true});
  await page.locator('.save summary').click();await page.locator('#region').selectOption('full-disc');await expect(page.locator('#image')).toBeVisible();await expect(page.locator('#export-result')).toBeHidden();await expect(page.locator('#image')).toHaveJSProperty('naturalWidth',550);
 });
-test('colour dark-frame warning recovers with earlier actual end time and carries TCR attribution',async({page},info)=>{
- await open(page,{blankColour:true});await page.locator('#product').selectOption('jma.himawari9.australia.trm');await expect(page.locator('#error')).toContainText('blank or too dark');await expect(page.locator('[data-export="frame"]')).toBeDisabled();
- await page.locator('#end-at').selectOption('0');await expect(page.locator('#image')).toBeVisible();await page.locator('.source summary').click();await expect(page.locator('#tcr-acknowledgement')).toContainText('10.2151/jmsj.2018-049');await page.locator('.source summary').click();
- await page.locator('.save summary').click();await exported(page,'zip');const files=unzipSync(await saved(page,info,'tcr.zip'));expect(new TextDecoder().decode(files['ATTRIBUTION.txt'])).toContain('NOAA/NESDIS');const record=JSON.parse(new TextDecoder().decode(files['manifest.json']));expect(record.product.rights.minimumCredit).toBe('JMA | NOAA/NESDIS | CSU/CIRA');
+for (const region of ['australia', 'full-disc']) test(`${region} TCR retains dark frames in viewing, playback, PNG, ZIP and video`,async({page},info)=>{
+ await fixtures(page,{blankColour:true});await page.goto('/');
+ await page.locator('#region').selectOption(region);await page.locator('#product').selectOption(`jma.himawari9.${region}.trm`);
+ await expect(page.locator('#image')).toBeVisible();await expect(page.locator('#error')).toBeHidden();
+ await expect(page.locator('#position')).toHaveText('3 / 3');await expect(page.locator('#observation')).toHaveText('2026-01-01 00:30 UTC');
+ expect(await page.locator('#image').evaluate(image=>{const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.drawImage(image,0,0,1,1);return x.getImageData(0,0,1,1).data[0];})).toBeLessThan(5);
+ await page.locator('#fps').selectOption('2');await page.getByRole('button',{name:'Play observations',exact:true}).click();
+ await expect(page.locator('#playback-image')).toBeVisible();
+ await expect.poll(()=>page.locator('#playback-image').evaluate(c=>c.getContext('2d').getImageData(c.width/2,c.height/4,1,1).data[0])).toBeLessThan(5);
+ await page.getByRole('button',{name:'Pause observations',exact:true}).click();await expect(page.locator('#position')).toHaveText('3 / 3');
+ await page.locator('.source summary').click();await expect(page.locator('#tcr-acknowledgement')).toContainText('10.2151/jmsj.2018-049');await page.locator('.source summary').click();
+ async function darkPng(bytes){return page.evaluate(async bytes=>{const image=await createImageBitmap(new Blob([new Uint8Array(bytes)],{type:'image/png'}));const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.drawImage(image,image.width/2,image.width/4,1,1,0,0,1,1);const red=x.getImageData(0,0,1,1).data[0];image.close();return red;},Array.from(bytes));}
+ await page.locator('.save summary').click();await exported(page,'frame');expect(await darkPng(await saved(page,info,'dark.png'))).toBeLessThan(5);
+ await exported(page,'zip');const files=unzipSync(await saved(page,info,'tcr.zip'));const names=Object.keys(files).filter(n=>n.endsWith('.png')).sort();expect(names).toHaveLength(3);expect(await darkPng(files[names.at(-1)])).toBeLessThan(5);
+ expect(new TextDecoder().decode(files['ATTRIBUTION.txt'])).toContain('NOAA/NESDIS');const record=JSON.parse(new TextDecoder().decode(files['manifest.json']));expect(record.frames).toHaveLength(3);expect(record.product.rights.minimumCredit).toBe('JMA | NOAA/NESDIS | CSU/CIRA');
+ await exported(page,'video');await expect(page.locator('#export-video')).toHaveJSProperty('duration',1.5);
+ const red=await page.locator('#export-video').evaluate(async video=>{await new Promise(resolve=>{video.onseeked=resolve;video.currentTime=1.25;});await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.drawImage(video,video.videoWidth/2,video.videoWidth/4,1,1,0,0,1,1);return x.getImageData(0,0,1,1).data[0];});expect(red).toBeLessThan(5);await saved(page,info,'dark-final-frame.webm');
 });
 test('changed regional dimensions are rejected without a stale image',async({page})=>{
  await fixtures(page,{badRegionalDimensions:true});await page.goto('/');await page.locator('#product').selectOption('jma.himawari9.full-disc.b13');await expect(page.locator('#image')).toBeVisible();await page.locator('#region').selectOption('australia');await expect(page.locator('#error')).toContainText('dimensions changed');await expect(page.locator('#image')).toBeHidden();

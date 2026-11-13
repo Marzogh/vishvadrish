@@ -11,7 +11,7 @@ export function schedule(entries, fps, gapPolicy) {
 }
 export function manifest(sequence, entries, settings) {
   return { schemaVersion: 1, product: sequence.product, requested: sequence.requested, gaps: sequence.gaps,
-    grid: sequence.grid, settings, timeMeaning: 'Observation label is scan end; filename slot is scan start. Pixels are not independently timestamp-verified.',
+    grid: sequence.grid, settings, timeMeaning: sequence.timeMeaning || 'Observation label is scan end; filename slot is scan start. Pixels are not independently timestamp-verified.',
     frames: entries.map(({ frame, sha256, acquiredAt, width, height }) => ({ ...frame, sha256, acquiredAt, width, height })) };
 }
 export async function render(entry, canvas, timestamps, product) {
@@ -22,9 +22,9 @@ export async function render(entry, canvas, timestamps, product) {
     const scale = Math.min(size / bitmap.width, imageHeight / bitmap.height);
     ctx.drawImage(bitmap, (size - bitmap.width * scale) / 2, (imageHeight - bitmap.height * scale) / 2, bitmap.width * scale, bitmap.height * scale);
     ctx.fillStyle = '#ffffff'; ctx.font = `${Math.max(11, Math.round(size / 50))}px monospace`;
-    if (timestamps) ctx.fillText('Scan end: ' + entry.frame.observedAt.replace('.000Z', 'Z'), 8, imageHeight + 17);
-    ctx.fillText(`Himawari-9 ${product.band.toUpperCase()} | ${product.rights.minimumCredit || 'MSC/JMA'} | scaled`, 8, imageHeight + 34);
-    ctx.fillText('www.data.jma.go.jp/mscweb/data/himawari/', 8, imageHeight + 49);
+    if (timestamps) ctx.fillText((product.id.startsWith('nict.') ? 'Provider slot: ' : 'Scan end: ') + entry.frame.observedAt.replace('.000Z', 'Z'), 8, imageHeight + 17);
+    ctx.fillText(`${product.id.startsWith('nict.') ? 'NICT' : 'Himawari-9'} ${product.band.toUpperCase()} | ${product.rights.minimumCredit || 'MSC/JMA'} | scaled`, 8, imageHeight + 34);
+    ctx.fillText(product.id.startsWith('nict.') ? 'himawari8.nict.go.jp | Non-commercial use' : 'www.data.jma.go.jp/mscweb/data/himawari/', 8, imageHeight + 49);
   } finally { bitmap.close(); }
 }
 export const pngBlob = canvas => new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(Error('PNG export failed')), 'image/png'));

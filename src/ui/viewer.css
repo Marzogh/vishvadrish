@@ -198,3 +198,7 @@ select option{color:var(--text);background:var(--bg)}
   :focus-visible,.zoom :focus-visible{outline-color:Highlight}
   button,select,select option,.hours-combo input{color:ButtonText;background:ButtonFace}
 }
+
+#history-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:6px 0 12px}#history-controls[hidden]{display:none}#history-controls label{display:flex;align-items:center;gap:6px}#history-controls input{max-width:155px;color:var(--text);background:var(--bg);border:0;border-bottom:1px solid currentColor;padding:3px}#history-status{font-size:13px}
+
+#extension-help{max-width:640px;max-height:85vh;overflow:auto;color:var(--text);background:var(--bg);border:1px solid currentColor;padding:24px}#extension-help::backdrop{background:rgb(0 0 0 / .65)}#extension-help p,#extension-help li{line-height:1.5}#extension-help li{margin-bottom:8px}#extension-help h2{margin-top:0}

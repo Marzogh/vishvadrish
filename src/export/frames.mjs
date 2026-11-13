@@ -2,10 +2,12 @@ import { SessionImageCache } from './session-cache.mjs';
 import { discoverJma, getProduct } from '../providers/jma.mjs';
 export class FrameStore {
   entries = new Map();
+  local = new Map();
   sessionCache = new SessionImageCache();
-  clear() { this.entries.clear(); }
+  clear() { this.entries.clear(); this.local.clear(); }
   async get(frame, signal) {
     signal?.throwIfAborted();
+    if (this.local.has(frame.id)) return this.local.get(frame.id);
     if (this.entries.has(frame.id)) return this.entries.get(frame.id);
     const saved = await this.sessionCache.get(frame);
     signal?.throwIfAborted();
@@ -20,13 +22,6 @@ export class FrameStore {
     const width = bitmap.width, height = bitmap.height;
     const product = getProduct(frame.productId);
     if (product.coverage.sourceWidth && (width !== product.coverage.sourceWidth || height !== product.coverage.sourceHeight)) { bitmap.close(); throw Error('Regional image dimensions changed. Refresh and retry.'); }
-    if (frame.requiresDaylight) {
-      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 32;
-      const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0, 32, 32);
-      const pixels = ctx.getImageData(0, 0, 32, 32).data; let bright = 0;
-      for (let i = 0; i < pixels.length; i += 4) if (Math.max(pixels[i], pixels[i+1], pixels[i+2]) > 20) bright++;
-      if (bright < 6) { bitmap.close(); throw Error('Colour image is blank or too dark. Choose an earlier end time or Infrared.'); }
-    }
     bitmap.close();
     const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(v => v.toString(16).padStart(2, '0')).join('');
     const entry = Object.freeze({ blob, frame, width, height, sha256: hash, acquiredAt: new Date().toISOString() });
@@ -46,13 +41,13 @@ export async function acquireSelection(sequence, store, signal, progress) {
     const current = await discoverJma({ signal, product: sequence.product });
     for (const frame of sequence.frames) if (!current.some(item => item.id === frame.id && item.source.slot === frame.source.slot)) throw Error('JMA observation list changed. Refresh and select again.');
   }
-  await validate(); const acquired = [];
+  if (!sequence.local) await validate(); const acquired = [];
   for (const [i, frame] of sequence.frames.entries()) {
     progress(`Fetching frame ${i + 1}/${sequence.frames.length}…`);
     acquired.push(await store.get(frame, signal));
     if (acquired.reduce((sum, entry) => sum + entry.blob.size, 0) > 50000000) throw Error('Selection exceeds 50 MB. Choose fewer hours.');
   }
-  await validate();
+  if (!sequence.local) await validate();
   if (acquired.some(entry => entry.width !== acquired[0].width || entry.height !== acquired[0].height)) throw Error('Image dimensions differ within the sequence.');
   return Object.freeze(acquired);
 }
